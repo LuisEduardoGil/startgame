@@ -1280,6 +1280,17 @@ function AdminPanel({ onExit }) {
 }
 
 /* ── Admin: Orders Tab ── */
+function GiftInput({ value, onChange }) {
+  return (
+    <input
+      value={value}
+      onChange={onChange}
+      placeholder="Código gift card..."
+      style={{ width:"100%", boxSizing:"border-box", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(0,200,150,0.4)", borderRadius:10, color:"#fff", fontSize:13, fontFamily:F, outline:"none", marginBottom:8 }}
+    />
+  );
+}
+
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1297,7 +1308,11 @@ function AdminOrders() {
   };
   useEffect(() => { load(); const iv = setInterval(load, 5000); return ()=>clearInterval(iv); }, []);
 
-  const handleVerify = async (id) => { await sb.update("orders", id, { status:"verified" }); load(); };
+  const handleVerify = async (id) => {
+    await sb.update("orders", id, { status:"verified" });
+    await load();
+    setSelected(prev => prev?.id === id ? { ...prev, status:"verified" } : prev);
+  };
   const handleDeliverWS = async () => {
     if (!selected) return;
     setSending(true);
@@ -1393,8 +1408,14 @@ function AdminOrders() {
             <button onClick={()=>handleVerify(order.id)} style={{ width:"100%", padding:"10px", background:"rgba(79,142,255,0.12)", border:"1px solid rgba(79,142,255,0.35)", borderRadius:10, color:"#4F8EFF", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer" }}>🔍 Marcar como verificado</button>
           )}
           {order.status==="verified" && (
-            <div>
-              <p style={{ color:"rgba(0,200,150,0.8)", fontSize:11, fontFamily:F, margin:0 }}>✏️ Escribe el código abajo</p>
+            <div onClick={e=>e.stopPropagation()}>
+              <GiftInput value={giftCode} onChange={e=>setGiftCode(e.target.value)}/>
+              <button disabled={!giftCode.trim()||sending} onClick={handleDeliver} style={{ width:"100%", padding:"10px", background:giftCode.trim()?"linear-gradient(135deg,#00C896,#00A878)":"rgba(255,255,255,0.04)", border:"none", borderRadius:10, color:giftCode.trim()?"#fff":"rgba(255,255,255,0.25)", fontSize:13, fontWeight:800, fontFamily:F, cursor:giftCode.trim()?"pointer":"not-allowed", marginBottom:8 }}>
+                {sending?"Enviando...":"✅ Entregar código"}
+              </button>
+              <button disabled={sending} onClick={handleDeliverWS} style={{ width:"100%", padding:"10px", background:"linear-gradient(135deg,#25D366,#1da851)", border:"none", borderRadius:10, color:"#fff", fontSize:13, fontWeight:800, fontFamily:F, cursor:"pointer" }}>
+                📱 Entregado por WhatsApp
+              </button>
             </div>
           )}
         </div>
@@ -1404,25 +1425,7 @@ function AdminOrders() {
 
   return (
     <div style={{ padding:"16px" }}>
-      {/* Delivery panel - shows when a verified order is selected */}
-      {selected?.status==="verified" && (
-        <div style={{ position:"sticky", top:0, zIndex:10, background:"rgba(18,18,30,0.97)", backdropFilter:"blur(12px)", border:"1px solid rgba(0,200,150,0.3)", borderRadius:14, padding:"14px", marginBottom:12 }}>
-          <p style={{ color:"#00C896", fontSize:11, fontFamily:F, fontWeight:700, margin:"0 0 8px" }}>📦 Pedido #{selected.id?.slice(0,8).toUpperCase()}</p>
-          <input
-            autoFocus
-            value={giftCode}
-            onChange={e=>setGiftCode(e.target.value)}
-            placeholder="Código gift card..."
-            style={{ width:"100%", boxSizing:"border-box", padding:"11px 14px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(0,200,150,0.4)", borderRadius:10, color:"#fff", fontSize:13, fontFamily:F, outline:"none", marginBottom:8 }}
-          />
-          <button disabled={!giftCode.trim()||sending} onClick={handleDeliver} style={{ width:"100%", padding:"10px", background:giftCode.trim()?"linear-gradient(135deg,#00C896,#00A878)":"rgba(255,255,255,0.04)", border:"none", borderRadius:10, color:giftCode.trim()?"#fff":"rgba(255,255,255,0.25)", fontSize:13, fontWeight:800, fontFamily:F, cursor:giftCode.trim()?"pointer":"not-allowed", marginBottom:8 }}>
-            {sending?"Enviando...":"✅ Entregar código"}
-          </button>
-          <button disabled={sending} onClick={handleDeliverWS} style={{ width:"100%", padding:"10px", background:"linear-gradient(135deg,#25D366,#1da851)", border:"none", borderRadius:10, color:"#fff", fontSize:13, fontWeight:800, fontFamily:F, cursor:"pointer" }}>
-            📱 Entregado por WhatsApp
-          </button>
-        </div>
-      )}
+
       {/* Stats */}
       <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.08em", margin:"0 0 8px", textTransform:"capitalize" }}>📊 {monthLabel}</p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:16 }}>
