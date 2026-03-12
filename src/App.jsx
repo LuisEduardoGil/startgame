@@ -19,32 +19,26 @@ import imgXbox        from "./assets/cards/xbox.png";
 const SUPABASE_URL = "https://zacdqpvhnlgtbgurfqac.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphY2RxcHZobmxndGJndXJmcWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1ODQzNjksImV4cCI6MjA4ODE2MDM2OX0.yFPCd6MfcT-wCRC1PELVu0YIyWxbozjHpsB63bo8zjs";
 
-// ─── EMAILJS CONFIG ── reemplaza con tus valores de emailjs.com ───
-const EJS_SERVICE_ID  = "service_8z4sv6q";   // ej: service_abc123
-const EJS_TEMPLATE_ID = "template_3w53qkf";  // ej: template_xyz789
-const EJS_PUBLIC_KEY  = "yHRDWre5KtKgcS8-n";   // ej: aBcDeFgHiJkLmNoP
+// ─── RESEND CONFIG ───────────────────────────────────────────────
+const RESEND_API_KEY = "re_Duch2Gnq_BytxT55CVVjH7YP6p3HoYEMR";
+const FROM_EMAIL     = "Start Game <noreply@startgame.app>";
 
 async function sendGiftEmail({ to_email, order_id, gift_code, items, payment_method, total }) {
-  // Lazy-load EmailJS SDK
-  if (!window.emailjs) {
-    await new Promise((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
-      s.onload = res; s.onerror = rej;
-      document.head.appendChild(s);
-    });
-    window.emailjs.init({ publicKey: EJS_PUBLIC_KEY });
-  }
-  const ML = { pagomovil:"Pago Móvil", binance:"Binance Pay", zinli:"Zinli", googlepay:"Google Pay" };
-  const items_text = (items||[]).map(i=>`${i.name} — ${i.amount} × ${i.quantity}`).join("\n");
-  return window.emailjs.send(EJS_SERVICE_ID, EJS_TEMPLATE_ID, {
-    to_email,
-    order_id: order_id?.slice(0,8).toUpperCase(),
-    gift_code,
-    items_text,
-    payment_method: ML[payment_method] || payment_method,
-    total: `$${total}`,
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/send-order-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+    },
+    body: JSON.stringify({ order_id, customer_email: to_email, gift_code, items, total, payment_method }),
   });
+  if (!res.ok) {
+    const err = await res.json();
+    console.error("Email error:", err);
+    throw new Error(err.message || "Email failed");
+  }
+  return res.json();
 }
 
 // Supabase Auth helpers
@@ -200,6 +194,21 @@ const COLORS = {
 const F = "'Roboto', sans-serif";
 
 // Static fallback image map
+// URLs públicas para emails (las imágenes locales no funcionan en emails)
+const EMAIL_IMGS = {
+  "PlayStation":    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Playstation_logo_colour.svg/120px-Playstation_logo_colour.svg.png",
+  "Xbox":           "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/120px-Xbox_one_logo.svg.png",
+  "Xbox Gift Card": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/120px-Xbox_one_logo.svg.png",
+  "Game Pass":      "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/120px-Xbox_one_logo.svg.png",
+  "Nintendo":       "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Nintendo.svg/120px-Nintendo.svg.png",
+  "Steam":          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/120px-Steam_icon_logo.svg.png",
+  "Roblox":         "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Roblox_player_icon_black.svg/120px-Roblox_player_icon_black.svg.png",
+  "Discord":        "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg",
+  "Apple":          "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/120px-Apple_logo_black.svg.png",
+  "Free Fire":      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Free_Fire_logo.png/120px-Free_Fire_logo.png",
+  "Riot Games":     "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Riot_Games_logo.svg/120px-Riot_Games_logo.svg.png",
+};
+
 const LOCAL_IMGS = {
   "PlayStation": imgPlaystation,
   "Xbox": imgXbox, "Xbox Gift Card": imgXbox,
