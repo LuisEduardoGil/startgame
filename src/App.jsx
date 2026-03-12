@@ -255,6 +255,25 @@ function useProducts() {
   return products;
 }
 
+// Global payment methods store
+const DEFAULT_METHODS = [
+  { id:"pagomovil", label:"Pago Móvil",  icon:"📱", color:"#00C896", info:[{label:"Teléfono",value:"0424-3663119"},{label:"Cédula",value:"28.236.056"},{label:"Banco",value:"Mercantil"}], fieldLabel:"Últimos 4 dígitos de la referencia", fieldPlaceholder:"Ej: 4821", maxLen:4 },
+  { id:"binance",   label:"Binance Pay", icon:"🟡", color:"#F3BA2F", info:[{label:"Pay ID",value:"62569716"}], fieldLabel:"ID de la orden", fieldPlaceholder:"Ej: 123456789", maxLen:20 },
+  { id:"zinli",     label:"Zinli",       icon:"💜", color:"#8B5CF6", info:[{label:"Correo",value:"Gil751630@gmail.com"}], fieldLabel:"Nombre del remitente", fieldPlaceholder:"Ej: Juan Pérez", maxLen:40 },
+  { id:"paypal",    label:"PayPal",      icon:"🔷", color:"#003087", info:[{label:"Correo",value:""}], fieldLabel:"Nombre del remitente", fieldPlaceholder:"Ej: Juan Pérez", maxLen:40 },
+];
+let GLOBAL_METHODS = DEFAULT_METHODS.map(m=>({...m}));
+const methodListeners = new Set();
+function setGlobalMethods(m) { GLOBAL_METHODS = m; methodListeners.forEach(fn => fn(m)); }
+function useMethods() {
+  const [methods, setMethods] = useState(GLOBAL_METHODS);
+  useEffect(() => {
+    methodListeners.add(setMethods);
+    return () => methodListeners.delete(setMethods);
+  }, []);
+  return methods;
+}
+
 function getImg(p) {
   if (p.img_url) return p.img_url;
   if (p.name && LOCAL_IMGS[p.name]) return LOCAL_IMGS[p.name];
@@ -853,52 +872,7 @@ function CheckoutScreen({ cart, onBack, onOrderCreated, session }) {
   const totalUsdt = cart.reduce((s, i) => { const r=i.selectedAmount.replace("$","").trim(); const u=getUsdt(i,r); const n=parseFloat(r); return s+(u?parseFloat(u)*i.quantity:(!isNaN(n)?n*i.quantity:0)); }, 0);
   const useUsdt = cart.some(i => getUsdt(i, i.selectedAmount.replace("$","").trim()));
 
-  const METHODS = [
-    {
-      id: "pagomovil",
-      label: "Pago Móvil",
-      icon: "📱",
-      color: "#00C896",
-      info: [
-        { label: "Teléfono", value: "0424-3663119" },
-        { label: "Cédula",   value: "28.236.056" },
-        { label: "Banco",    value: "Mercantil" },
-      ],
-      fieldLabel: "Últimos 4 dígitos de la referencia",
-      fieldPlaceholder: "Ej: 4821",
-      maxLen: 4,
-    },
-    {
-      id: "binance",
-      label: "Binance Pay",
-      icon: "🟡",
-      color: "#F3BA2F",
-      info: [{ label: "Pay ID", value: "62569716" }],
-      fieldLabel: "ID de la orden",
-      fieldPlaceholder: "Ej: 123456789",
-      maxLen: 20,
-    },
-    {
-      id: "zinli",
-      label: "Zinli",
-      icon: "💜",
-      color: "#8B5CF6",
-      info: [{ label: "Correo", value: "Gil751630@gmail.com" }],
-      fieldLabel: "Nombre del remitente",
-      fieldPlaceholder: "Ej: Juan Pérez",
-      maxLen: 40,
-    },
-    {
-      id: "googlepay",
-      label: "Google Pay",
-      icon: "🔵",
-      color: "#4285F4",
-      info: [],
-      fieldLabel: "ID de la transacción",
-      fieldPlaceholder: "Ej: TXN-XXXXXXX",
-      maxLen: 30,
-    },
-  ];
+  const METHODS = useMethods();
 
   const selected = METHODS.find(m => m.id === method);
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail);
@@ -1114,7 +1088,7 @@ function OrderStatusScreen({ orderId, onBack }) {
             </div>
           )}
           <a href={`https://wa.me/${WS_NUMBER}?text=${encodeURIComponent(
-            `Hola, ya verifiqué mi pago:\nPedido: #${orderId?.slice(0,8).toUpperCase()}\nMonto en Bs: ${order.total_bs ? Number(order.total_bs).toLocaleString("es-VE", {minimumFractionDigits:0, maximumFractionDigits:0}) : "—"}\nNro. de referencia: ${order.customer_ref}\nMétodo de pago: ${{pagomovil:"Pago Móvil",binance:"Binance Pay",zinli:"Zinli",zelle:"Zelle"}[order.payment_method] || order.payment_method || "—"}\nProductos:\n${(order.items||[]).map(i => `- ${i.name} - ${i.amount.replace("$","").trim()}$ x${i.quantity}`).join("\n")}`
+            `Hola, ya verifiqué mi pago:\nPedido: #${orderId?.slice(0,8).toUpperCase()}\nMonto en Bs: ${order.total_bs ? Number(order.total_bs).toLocaleString("es-VE", {minimumFractionDigits:0, maximumFractionDigits:0}) : "—"}\nNro. de referencia: ${order.customer_ref}\nMétodo de pago: ${{pagomovil:"Pago Móvil",binance:"Binance Pay",zinli:"Zinli",paypal:"PayPal"}[order.payment_method] || order.payment_method || "—"}\nProductos:\n${(order.items||[]).map(i => `- ${i.name} - ${i.amount.replace("$","").trim()}$ x${i.quantity}`).join("\n")}`
           )}`} target="_blank" rel="noreferrer"
             style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, width:"100%", boxSizing:"border-box", padding:"16px", background:"#25D366", borderRadius:14, color:"#fff", fontSize:15, fontWeight:800, fontFamily:F, textDecoration:"none", boxShadow:"0 4px 20px rgba(37,211,102,0.35)" }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.553 4.122 1.523 5.855L0 24l6.29-1.49A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.37l-.36-.214-3.732.884.916-3.636-.234-.374A9.818 9.818 0 1112 21.818z"/></svg>
@@ -1156,7 +1130,7 @@ function OrderStatusScreen({ orderId, onBack }) {
                   <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
                     <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 4px" }}>MÉTODO DE PAGO</p>
                     <p style={{ color:"#fff", fontSize:15, fontWeight:800, fontFamily:F, margin:0 }}>
-                      {{"pagomovil":"📱 Pago Móvil","binance":"🟡 Binance Pay","zinli":"💜 Zinli","googlepay":"🔵 Google Pay"}[order?.payment_method] || order?.payment_method}
+                      {{"pagomovil":"📱 Pago Móvil","binance":"🟡 Binance Pay","zinli":"💜 Zinli","paypal":"🔷 PayPal"}[order?.payment_method] || order?.payment_method}
                     </p>
                   </div>
                   <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
@@ -1373,7 +1347,7 @@ function AdminOrders() {
 
   const SL = { pending:"⏳ Pendiente", verified:"🔍 Verificado", delivered:"✅ Entregado" };
   const SC = { pending:"#F3BA2F", verified:"#4F8EFF", delivered:"#00C896" };
-  const ML = { pagomovil:"📱 Pago Móvil", binance:"🟡 Binance", zinli:"💜 Zinli", googlepay:"🔵 Google Pay" };
+  const ML = { pagomovil:"📱 Pago Móvil", binance:"🟡 Binance", zinli:"💜 Zinli", paypal:"🔷 PayPal" };
 
   // Monthly filter for stats
   const now = new Date();
@@ -1791,6 +1765,103 @@ function BannerEditor() {
   );
 }
 
+function PaymentMethodsEditor() {
+  const [methods, setMethods] = useState(() => GLOBAL_METHODS.map(m => ({ ...m, info: m.info.map(i=>({...i})) })));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [expanded, setExpanded] = useState(null);
+
+  const update = (idx, field, val) => setMethods(prev => prev.map((m,i) => i===idx ? {...m,[field]:val} : m));
+  const updateInfo = (mIdx, iIdx, field, val) => setMethods(prev => prev.map((m,i) => i!==mIdx ? m : {
+    ...m, info: m.info.map((row,j) => j===iIdx ? {...row,[field]:val} : row)
+  }));
+  const addInfoRow = (mIdx) => setMethods(prev => prev.map((m,i) => i!==mIdx ? m : { ...m, info:[...m.info,{label:"",value:""}] }));
+  const removeInfoRow = (mIdx, iIdx) => setMethods(prev => prev.map((m,i) => i!==mIdx ? m : { ...m, info:m.info.filter((_,j)=>j!==iIdx) }));
+
+  const save = async () => {
+    setSaving(true);
+    await sb.upsertSetting("payment_methods", JSON.stringify(methods));
+    setGlobalMethods(methods);
+    setSaving(false); setSaved(true);
+    setTimeout(()=>setSaved(false), 2000);
+  };
+
+  return (
+    <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px", marginBottom:16 }}>
+      <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 14px" }}>MÉTODOS DE PAGO</p>
+      {methods.map((m, mIdx) => (
+        <div key={m.id} style={{ marginBottom:10, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:12, overflow:"hidden" }}>
+          {/* Header row */}
+          <div onClick={()=>setExpanded(expanded===mIdx?null:mIdx)}
+            style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 14px", cursor:"pointer" }}>
+            <span style={{ fontSize:20 }}>{m.icon}</span>
+            <p style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:F, margin:0, flex:1 }}>{m.label}</p>
+            <span style={{ color:"#F0EDE8", fontSize:11 }}>{expanded===mIdx?"▼":"▶"}</span>
+          </div>
+          {/* Expanded editor */}
+          {expanded===mIdx && (
+            <div style={{ padding:"0 14px 14px", borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+              {/* Label + Icon + Color */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 60px 80px", gap:8, marginTop:12, marginBottom:10 }}>
+                <div>
+                  <p style={{ color:"#F0EDE8", fontSize:9, fontFamily:F, margin:"0 0 4px" }}>NOMBRE</p>
+                  <input value={m.label} onChange={e=>update(mIdx,"label",e.target.value)}
+                    style={{ width:"100%", boxSizing:"border-box", padding:"8px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontFamily:F, outline:"none" }}/>
+                </div>
+                <div>
+                  <p style={{ color:"#F0EDE8", fontSize:9, fontFamily:F, margin:"0 0 4px" }}>ÍCONO</p>
+                  <input value={m.icon} onChange={e=>update(mIdx,"icon",e.target.value)}
+                    style={{ width:"100%", boxSizing:"border-box", padding:"8px 6px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:16, fontFamily:F, outline:"none", textAlign:"center" }}/>
+                </div>
+                <div>
+                  <p style={{ color:"#F0EDE8", fontSize:9, fontFamily:F, margin:"0 0 4px" }}>COLOR</p>
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <input type="color" value={m.color} onChange={e=>update(mIdx,"color",e.target.value)}
+                      style={{ width:32, height:32, border:"none", borderRadius:6, cursor:"pointer", background:"none", padding:0 }}/>
+                    <input value={m.color} onChange={e=>update(mIdx,"color",e.target.value)}
+                      style={{ flex:1, padding:"8px 6px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:10, fontFamily:F, outline:"none" }}/>
+                  </div>
+                </div>
+              </div>
+              {/* Field label + placeholder */}
+              <div style={{ marginBottom:10 }}>
+                <p style={{ color:"#F0EDE8", fontSize:9, fontFamily:F, margin:"0 0 4px" }}>LABEL DEL COMPROBANTE</p>
+                <input value={m.fieldLabel||""} onChange={e=>update(mIdx,"fieldLabel",e.target.value)}
+                  style={{ width:"100%", boxSizing:"border-box", padding:"8px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontFamily:F, outline:"none" }}/>
+              </div>
+              <div style={{ marginBottom:12 }}>
+                <p style={{ color:"#F0EDE8", fontSize:9, fontFamily:F, margin:"0 0 4px" }}>PLACEHOLDER DEL COMPROBANTE</p>
+                <input value={m.fieldPlaceholder||""} onChange={e=>update(mIdx,"fieldPlaceholder",e.target.value)}
+                  style={{ width:"100%", boxSizing:"border-box", padding:"8px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontFamily:F, outline:"none" }}/>
+              </div>
+              {/* Info rows */}
+              <p style={{ color:"rgba(0,200,150,0.8)", fontSize:9, fontFamily:F, fontWeight:700, margin:"0 0 6px", letterSpacing:"0.08em" }}>DATOS DE PAGO (visibles al cliente)</p>
+              {m.info.map((row, iIdx) => (
+                <div key={iIdx} style={{ display:"flex", gap:6, marginBottom:6, alignItems:"center" }}>
+                  <input value={row.label} onChange={e=>updateInfo(mIdx,iIdx,"label",e.target.value)} placeholder="Etiqueta"
+                    style={{ flex:"0 0 90px", padding:"7px 8px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)", borderRadius:7, color:"#F0EDE8", fontSize:11, fontFamily:F, outline:"none" }}/>
+                  <input value={row.value} onChange={e=>updateInfo(mIdx,iIdx,"value",e.target.value)} placeholder="Valor"
+                    style={{ flex:1, padding:"7px 8px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.10)", borderRadius:7, color:"#fff", fontSize:11, fontFamily:F, outline:"none" }}/>
+                  <button onClick={()=>removeInfoRow(mIdx,iIdx)}
+                    style={{ width:28, height:28, background:"rgba(255,77,106,0.12)", border:"none", borderRadius:6, color:"#FF4D6A", cursor:"pointer", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>✕</button>
+                </div>
+              ))}
+              <button onClick={()=>addInfoRow(mIdx)}
+                style={{ padding:"6px 12px", background:"rgba(0,200,150,0.1)", border:"1px solid rgba(0,200,150,0.25)", borderRadius:8, color:"#00C896", fontSize:11, fontFamily:F, cursor:"pointer", marginTop:4 }}>
+                + Añadir dato
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+      <button onClick={save} disabled={saving}
+        style={{ width:"100%", padding:"11px", background:saved?"rgba(0,200,150,0.2)":"linear-gradient(135deg,#7B6FFF,#4F8EFF)", border:"none", borderRadius:10, color:"#fff", fontSize:12, fontWeight:800, fontFamily:F, cursor:"pointer", marginTop:4 }}>
+        {saving?"Guardando...":saved?"✓ Guardado":"💾 Guardar métodos de pago"}
+      </button>
+    </div>
+  );
+}
+
 function AdminSettings() {
   const tasa = useTasa();
   const [tasaInput, setTasaInput] = useState(String(tasa));
@@ -1833,19 +1904,7 @@ function AdminSettings() {
       {/* Banner editor */}
       <BannerEditor/>
 
-      <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, padding:"18px" }}>
-        <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 10px" }}>INFO DE PAGOS</p>
-        {[
-          {label:"📱 Pago Móvil", items:["0424-3663119","CI: 28.236.056","Mercantil"]},
-          {label:"🟡 Binance Pay", items:["ID: 62569716"]},
-          {label:"💜 Zinli", items:["Gil751630@gmail.com"]},
-        ].map((m,i)=>(
-          <div key={i} style={{ marginBottom:10, padding:"10px 12px", background:"rgba(255,255,255,0.03)", borderRadius:10 }}>
-            <p style={{ color:"#F0EDE8", fontSize:12, fontFamily:F, fontWeight:700, margin:"0 0 4px" }}>{m.label}</p>
-            {m.items.map((item,j)=><p key={j} style={{ color:"#F0EDE8", fontSize:11, fontFamily:F, margin:0 }}>{item}</p>)}
-          </div>
-        ))}
-      </div>
+      <PaymentMethodsEditor/>
     </div>
   );
 }
@@ -1916,8 +1975,10 @@ export default function App() {
     Promise.all([
       sb.getSetting("tasa_dolar"),
       sb.getAll("products"),
-    ]).then(([tasa, rows]) => {
+      sb.getSetting("payment_methods"),
+    ]).then(([tasa, rows, payMethods]) => {
       if (tasa) setGlobalTasa(parseFloat(tasa));
+      if (payMethods) { try { setGlobalMethods(JSON.parse(payMethods)); } catch(e) {} }
       console.log("Supabase products:", JSON.stringify(rows));
       // Pure Supabase — no merging with defaults
       if (Array.isArray(rows) && rows.length > 0) {
