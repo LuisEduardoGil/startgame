@@ -915,6 +915,7 @@ function CheckoutScreen({ cart, onBack, onOrderCreated, session }) {
         items: cart.map(i => ({ name: i.name, amount: i.selectedAmount, quantity: i.quantity })),
         total,
         total_bs: totalBs,
+        total_usdt: useUsdt ? parseFloat(totalUsdt.toFixed(2)) : null,
         status: "pending",
         manual_delivery: isManual
       });
@@ -1352,7 +1353,7 @@ function AdminOrders() {
 
   const OrderCard = ({ order }) => (
     <div key={order.id} onClick={()=>{ setSelected(s => s?.id===order.id ? null : order); setGiftCode(""); }}
-      style={{ background:selected?.id===order.id?"rgba(123,111,255,0.10)":"rgba(255,255,255,0.03)", border:`1px solid ${selected?.id===order.id?"rgba(123,111,255,0.4)":"rgba(255,255,255,0.07)"}`, borderRadius:14, padding:"13px", marginBottom:6, cursor:"pointer" }}>
+      style={{ background:selected?.id===order.id?"rgba(123,111,255,0.10)":"rgba(255,255,255,0.03)", border:`1px solid ${selected?.id===order.id?"rgba(123,111,255,0.4)":"rgba(255,255,255,0.07)"}`, borderRadius:14, padding:"13px", marginBottom:6, cursor:"pointer", width:"100%", boxSizing:"border-box" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
         <div>
           <p style={{ color:"#fff", fontSize:12, fontWeight:700, fontFamily:F, margin:"0 0 1px" }}>#{order.id?.slice(0,8).toUpperCase()}</p>
@@ -1367,15 +1368,15 @@ function AdminOrders() {
           {order.customer_email && <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, margin:"2px 0 0" }}>✉️ {order.customer_email}</p>}
         </div>
         <div style={{ textAlign:"right" }}>
-          <p style={{ color:"#fff", fontSize:14, fontWeight:800, fontFamily:F, margin:0 }}>{fmtBs(order.total||0, tasa)}</p>
-          <p style={{ color:"rgba(255,255,255,0.9)", fontSize:10, fontFamily:F, margin:0 }}>${order.total} USD</p>
+          <p style={{ color:"#fff", fontSize:14, fontWeight:800, fontFamily:F, margin:0 }}>{order.total_bs ? `Bs. ${Number(order.total_bs).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2})}` : fmtBs(order.total||0, tasa)}</p>
+          <p style={{ color:"rgba(255,255,255,0.9)", fontSize:10, fontFamily:F, margin:0 }}>{order.total_usdt ? `${Number(order.total_usdt).toFixed(2)} USDT` : `$${order.total} USD`}</p>
         </div>
       </div>
       {order.items && order.items.map((item,i)=>(
         <div key={i} style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.03)", borderRadius:8, padding:"6px 10px", marginBottom:3 }}>
           <span style={{ fontSize:12 }}>🎁</span>
           <p style={{ color:"#ffffff", fontSize:11, fontFamily:F, fontWeight:600, margin:0, flex:1 }}>{item.name}</p>
-          <span style={{ color:"rgba(255,255,255,0.9)", fontSize:10, fontFamily:F }}>{item.amount} × {item.quantity}</span>
+          <span style={{ color:"rgba(255,255,255,0.9)", fontSize:10, fontFamily:F }}>{item.selectedAmount || item.amount} × {item.quantity}</span>
         </div>
       ))}
       {selected?.id===order.id && order.status!=="delivered" && (
