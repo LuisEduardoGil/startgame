@@ -2158,6 +2158,12 @@ export default function App() {
 
   // Load tasa + products on mount
   useEffect(() => {
+    // Mostrar app de inmediato con defaults
+    setGlobalProducts(DEFAULT_PRODUCTS);
+    setAppReady(true);
+    document.body.style.overflow = "";
+
+    // Cargar Supabase en background
     Promise.all([
       sb.getSetting("tasa_dolar"),
       sb.getAll("products"),
@@ -2165,13 +2171,7 @@ export default function App() {
     ]).then(([tasa, rows, payMethods]) => {
       if (tasa) setGlobalTasa(parseFloat(tasa));
       if (payMethods) { try { setGlobalMethods(JSON.parse(payMethods)); } catch(e) {} }
-      if (Array.isArray(rows) && rows.length > 0) {
-        setGlobalProducts(rows);
-      } else {
-        setGlobalProducts(DEFAULT_PRODUCTS);
-      }
-      setAppReady(true);
-      document.body.style.overflow = "";
+      if (Array.isArray(rows) && rows.length > 0) setGlobalProducts(rows);
       if(mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
       const hashSlug = window.location.hash.replace(/^#\/?/, "");
       if (hashSlug && hashSlug !== "/") {
@@ -2179,7 +2179,6 @@ export default function App() {
         if (found) setDeepLinkCard(found);
       }
     });
-    document.body.style.overflow = "hidden";
   }, []);
 
   // Secret: tap logo 5 times to open admin
