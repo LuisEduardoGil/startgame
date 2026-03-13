@@ -23,6 +23,7 @@ const ML: Record<string, string> = {
   pagomovil: "Pago Móvil",
   binance: "Binance Pay",
   zinli: "Zinli",
+  zelle: "Zelle",
   googlepay: "Google Pay",
 };
 
@@ -40,13 +41,40 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400 });
     }
 
+    // Parse gift_code — could be a JSON array (multi-item) or plain string
+    let codesArray: { name: string; amount: string; code: string }[] | null = null;
+    try {
+      const parsed = JSON.parse(gift_code);
+      if (Array.isArray(parsed)) codesArray = parsed;
+    } catch (_) { /* single code */ }
+
+    // Build items HTML
     const itemsHtml = (items || []).map((i: { name: string; amount: string; quantity: number }) => {
-      const imgUrl = EMAIL_IMGS[i.name] || "";
+      const imgUrl = Object.entries(EMAIL_IMGS).find(([k]) => i.name.includes(k))?.[1] || "";
       const imgTag = imgUrl
         ? `<img src="${imgUrl}" width="44" height="44" style="border-radius:10px;object-fit:contain;background:#1a1a2e;padding:4px;vertical-align:middle;margin-right:12px;" alt="${i.name}"/>`
         : "";
       return `<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">${imgTag}<div><p style="color:#fff;font-size:14px;font-weight:700;margin:0 0 2px;font-family:'Inter',sans-serif;">${i.name}</p><p style="color:rgba(255,255,255,0.4);font-size:12px;margin:0;font-family:'Inter',sans-serif;">${i.amount} × ${i.quantity}</p></div></div>`;
     }).join("");
+
+    // Build codes HTML — one card per code
+    const codesHtml = codesArray
+      ? codesArray.map(entry => `
+        <div style="background:rgba(0,200,150,0.06);border:1.5px solid rgba(0,200,150,0.2);border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;">
+          <p style="color:rgba(0,200,150,0.7);font-size:10px;font-weight:700;letter-spacing:0.2em;margin:0 0 4px;text-transform:uppercase;font-family:'Inter',sans-serif;">${entry.name} — ${entry.amount}</p>
+          <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 20px;margin-bottom:8px;">
+            <p style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:0.1em;font-family:'Courier New',monospace;">${entry.code}</p>
+          </div>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;font-family:'Inter',sans-serif;">Canjéalo en la plataforma correspondiente</p>
+        </div>`).join("")
+      : `
+        <div style="background:rgba(0,200,150,0.06);border:1.5px solid rgba(0,200,150,0.2);border-radius:16px;padding:24px;text-align:center;margin-bottom:20px;">
+          <p style="color:rgba(0,200,150,0.7);font-size:10px;font-weight:700;letter-spacing:0.2em;margin:0 0 12px;text-transform:uppercase;font-family:'Inter',sans-serif;">Tu código</p>
+          <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 20px;margin-bottom:10px;">
+            <p style="color:#fff;font-size:26px;font-weight:900;margin:0;letter-spacing:0.1em;font-family:'Courier New',monospace;">${gift_code}</p>
+          </div>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;font-family:'Inter',sans-serif;">Canjéalo en la plataforma correspondiente</p>
+        </div>`;
 
     const html = `<!DOCTYPE html>
 <html>
@@ -68,16 +96,10 @@ serve(async (req) => {
           <circle cx="36" cy="36" r="30" stroke="#00C896" stroke-width="4" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="0" transform="rotate(-90 36 36)"/>
           <polyline points="22,37 31,46 50,27" stroke="#00C896" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2 style="color:#fff;margin:0 0 6px;font-size:22px;font-weight:900;font-family:'Inter',sans-serif;">¡Gift card entregada!</h2>
+        <h2 style="color:#fff;margin:0 0 6px;font-size:22px;font-weight:900;font-family:'Inter',sans-serif;">¡Gift card${codesArray && codesArray.length > 1 ? 's entregadas' : ' entregada'}!</h2>
         <p style="color:rgba(255,255,255,0.35);margin:0;font-size:13px;font-family:'Inter',sans-serif;">Pedido <strong style="color:#7B6FFF;">#${order_id?.slice(0, 8).toUpperCase()}</strong></p>
       </div>
-      <div style="background:rgba(0,200,150,0.06);border:1.5px solid rgba(0,200,150,0.2);border-radius:16px;padding:24px;text-align:center;margin-bottom:20px;">
-        <p style="color:rgba(0,200,150,0.7);font-size:10px;font-weight:700;letter-spacing:0.2em;margin:0 0 12px;text-transform:uppercase;font-family:'Inter',sans-serif;">Tu código</p>
-        <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 20px;margin-bottom:10px;">
-          <p style="color:#fff;font-size:26px;font-weight:900;margin:0;letter-spacing:0.1em;font-family:'Courier New',monospace;">${gift_code}</p>
-        </div>
-        <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:0;font-family:'Inter',sans-serif;">Canjéalo en la plataforma correspondiente</p>
-      </div>
+      ${codesHtml}
       <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px;margin-bottom:20px;">
         <p style="color:rgba(255,255,255,0.25);font-size:10px;font-weight:700;letter-spacing:0.15em;margin:0 0 12px;text-transform:uppercase;font-family:'Inter',sans-serif;">Resumen del pedido</p>
         <div style="padding:0 0 4px;">${itemsHtml}</div>
@@ -105,7 +127,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [customer_email],
-        subject: `🎮 Tu código Start Game — Pedido #${order_id?.slice(0, 8).toUpperCase()}`,
+        subject: `🎮 Tu${codesArray && codesArray.length > 1 ? 's códigos' : ' código'} Start Game — Pedido #${order_id?.slice(0, 8).toUpperCase()}`,
         html,
       }),
     });
