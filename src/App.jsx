@@ -583,17 +583,7 @@ function AutoScrollCards({ cards, onCardClick }) {
               <img src={getImg(card)} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}/>
             </div>
             <div style={{ padding:"6px 10px 10px 10px", display:"flex", flexDirection:"column", justifyContent:"flex-start" }}>
-              <p style={{ color:COLORS.text, fontSize:11, fontWeight:700, margin:"0 0 2px", fontFamily:F, minHeight:28, maxHeight:28, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{card.name}</p>
-              <p style={{ color:COLORS.textSub, fontSize:10, fontWeight:800, margin:0, fontFamily:F }}>
-                {(() => {
-                  const a = (card.amounts||[])[0];
-                  const u = getUsdt(card, a);
-                  const num = parseFloat(String(a));
-                  if (u) return fmtBs(null, tasa, parseFloat(u));
-                  if (!isNaN(num)) return fmtBs(num, tasa);
-                  return a||"";
-                })()}
-              </p>
+              <p style={{ color:COLORS.text, fontSize:11, fontWeight:700, margin:0, fontFamily:F, minHeight:28, maxHeight:28, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{card.name}</p>
             </div>
           </div>
         ))}
