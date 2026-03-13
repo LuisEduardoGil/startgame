@@ -1319,8 +1319,7 @@ function OrderStatusScreen({ orderId, onBack }) {
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
-                          <p style={{ color:"#00C896", fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Pedido{"
-"}enviado</p>
+                          <p style={{ color:"#00C896", fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Pedido enviado</p>
                         </div>
                         {/* Line 1 */}
                         <div style={{ flex:1, height:2, background:"linear-gradient(90deg,#00C896,#4F8EFF)", marginTop:15, borderRadius:2 }}/>
@@ -1331,8 +1330,7 @@ function OrderStatusScreen({ orderId, onBack }) {
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </div>
-                          <p style={{ color:"#4F8EFF", fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Pago{"
-"}verificado</p>
+                          <p style={{ color:"#4F8EFF", fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Pago verificado</p>
                         </div>
                         {/* Line 2 */}
                         <div style={{ flex:1, height:2, background:"rgba(255,255,255,0.10)", marginTop:15, borderRadius:2, position:"relative", overflow:"hidden" }}>
@@ -1343,8 +1341,7 @@ function OrderStatusScreen({ orderId, onBack }) {
                           <div style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"2px solid rgba(255,255,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center", gap:3, marginBottom:8 }}>
                             {[0,1,2].map(i => <div key={i} style={{ width:4, height:4, borderRadius:"50%", background:"rgba(255,255,255,0.4)", animation:`dotBounce 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
                           </div>
-                          <p style={{ color:COLORS.textMuted, fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Preparando{"
-"}gift card</p>
+                          <p style={{ color:COLORS.textMuted, fontSize:10, fontWeight:700, fontFamily:F, margin:0, textAlign:"center", lineHeight:1.3 }}>Preparando gift card</p>
                         </div>
                       </div>
                       <h3 style={{ color:"#4F8EFF", fontSize:18, fontWeight:800, fontFamily:F, margin:"0 0 6px" }}>Pago confirmado</h3>
