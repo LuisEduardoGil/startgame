@@ -2158,20 +2158,44 @@ export default function App() {
 
   // Load tasa + products on mount
   useEffect(() => {
-    // Mostrar app de inmediato con defaults
-    setGlobalProducts(DEFAULT_PRODUCTS);
+    // Paso 1: cache de localStorage (datos reales de la sesion anterior)
+    const CACHE_KEY = "sg_cache_v1";
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { products, tasa, methods } = JSON.parse(cached);
+        if (products?.length) setGlobalProducts(products);
+        if (tasa) setGlobalTasa(tasa);
+        if (methods?.length) setGlobalMethods(methods);
+      } else {
+        setGlobalProducts(DEFAULT_PRODUCTS);
+      }
+    } catch(e) {
+      setGlobalProducts(DEFAULT_PRODUCTS);
+    }
     setAppReady(true);
     document.body.style.overflow = "";
 
-    // Cargar Supabase en background
+    // Paso 2: Supabase en background — actualiza y guarda cache
     Promise.all([
       sb.getSetting("tasa_dolar"),
       sb.getAll("products"),
       sb.getSetting("payment_methods"),
     ]).then(([tasa, rows, payMethods]) => {
-      if (tasa) setGlobalTasa(parseFloat(tasa));
-      if (payMethods) { try { setGlobalMethods(JSON.parse(payMethods)); } catch(e) {} }
-      if (Array.isArray(rows) && rows.length > 0) setGlobalProducts(rows);
+      const newTasa = tasa ? parseFloat(tasa) : null;
+      const newMethods = payMethods ? (() => { try { return JSON.parse(payMethods); } catch(e) { return null; } })() : null;
+      const newProducts = Array.isArray(rows) && rows.length > 0 ? rows : null;
+      if (newTasa) setGlobalTasa(newTasa);
+      if (newMethods) setGlobalMethods(newMethods);
+      if (newProducts) setGlobalProducts(newProducts);
+      // Paso 3: guardar cache para proxima apertura
+      try {
+        localStorage.setItem("sg_cache_v1", JSON.stringify({
+          products: newProducts || GLOBAL_PRODUCTS,
+          tasa: newTasa || GLOBAL_TASA,
+          methods: newMethods || GLOBAL_METHODS,
+        }));
+      } catch(e) {}
       if(mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
       const hashSlug = window.location.hash.replace(/^#\/?/, "");
       if (hashSlug && hashSlug !== "/") {
