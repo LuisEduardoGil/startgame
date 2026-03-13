@@ -131,12 +131,23 @@ const sb = {
     return r.ok;
   },
   async upsertSetting(key, value) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.${key}`, {
+    // Try PATCH first (update existing row)
+    const patch = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.${key}`, {
       method: "PATCH",
       headers: HEADERS,
       body: JSON.stringify({ value }),
     });
-    return r.ok;
+    // If no row was updated, INSERT it
+    const text = await patch.text();
+    const updated = text && text !== "[]" && text !== "";
+    if (!updated || patch.status === 404) {
+      await fetch(`${SUPABASE_URL}/rest/v1/settings`, {
+        method: "POST",
+        headers: { ...HEADERS, "Prefer": "return=representation" },
+        body: JSON.stringify({ key, value }),
+      });
+    }
+    return true;
   },
   async getSetting(key) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.${key}`, { headers: HEADERS });
@@ -1892,7 +1903,10 @@ function BannerEditor() {
 }
 
 function PaymentMethodsEditor() {
+  const globalMethods = useMethods();
   const [methods, setMethods] = useState(() => GLOBAL_METHODS.map(m => ({ ...m, info: m.info.map(i=>({...i})) })));
+  // Sync with global when loaded from Supabase
+  useEffect(() => { setMethods(globalMethods.map(m => ({ ...m, info: (m.info||[]).map(i=>({...i})) }))); }, [globalMethods.length]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [expanded, setExpanded] = useState(null);
