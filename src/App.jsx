@@ -648,7 +648,7 @@ function StoreScreen({ onAddToCart, onBuyNow, cart, onCartClick }) {
   return (
     <div style={{ padding:"24px 20px", paddingBottom:100 }}>
       <div style={{ marginBottom:24 }}>
-        <h2 style={{ color:COLORS.text, fontSize:26, fontWeight:900, margin:0, fontFamily:F }}>Tienda<span style={{ color:"#7B6FFF" }}>.</span></h2>
+        <h2 style={{ color:COLORS.text, fontSize:26, fontWeight:900, margin:0, fontFamily:F }}>Tienda</h2>
       </div>
       <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:16, border:"1px solid rgba(255,255,255,0.10)", padding:"12px 16px", display:"flex", alignItems:"center", gap:12, marginBottom:16, transition:"border 0.2s", ...(search ? { border:"1px solid rgba(123,111,255,0.4)" } : {}) }}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
