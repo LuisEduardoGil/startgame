@@ -1494,6 +1494,14 @@ function AdminOrders() {
     await load();
     setSelected(prev => prev?.id === id ? { ...prev, status:"verified" } : prev);
   };
+  const handleReject = async (id) => {
+    if (!window.confirm("¿Eliminar este pedido? Esta acción no se puede deshacer.")) return;
+    await sb.delete("orders", id);
+    setSelected(null);
+    setGiftCodes({});
+    setOrderNote("");
+    load();
+  };
   const handleDeliverWS = async () => {
     if (!selected) return;
     setSending(true);
@@ -1600,7 +1608,10 @@ function AdminOrders() {
       {selected?.id===order.id && order.status!=="delivered" && (
         <div style={{ marginTop:10, paddingTop:10, borderTop:"1px solid rgba(255,255,255,0.07)" }} onClick={e=>e.stopPropagation()}>
           {order.status==="pending" && (
-            <button onClick={()=>handleVerify(order.id)} style={{ width:"100%", padding:"10px", background:"rgba(79,142,255,0.12)", border:"1px solid rgba(79,142,255,0.35)", borderRadius:10, color:"#4F8EFF", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer" }}>🔍 Marcar como verificado</button>
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              <button onClick={()=>handleVerify(order.id)} style={{ width:"100%", padding:"10px", background:"rgba(79,142,255,0.12)", border:"1px solid rgba(79,142,255,0.35)", borderRadius:10, color:"#4F8EFF", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer" }}>🔍 Marcar como verificado</button>
+              <button onClick={()=>handleReject(order.id)} style={{ width:"100%", padding:"10px", background:"rgba(255,77,106,0.08)", border:"1px solid rgba(255,77,106,0.30)", borderRadius:10, color:"#FF4D6A", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer" }}>✕ No verificado — Eliminar pedido</button>
+            </div>
           )}
           {order.status==="verified" && (
             <div onClick={e=>e.stopPropagation()}>
