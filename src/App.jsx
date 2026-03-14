@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import logo from "./Logo.png";
+import nexusLogo from "./assets/nexus-logo.png";
 
 import imgApple       from "./assets/cards/apple.png";
 import imgBattlenet   from "./assets/cards/battlenet.png";
@@ -686,12 +687,11 @@ function NexusScreen() {
   return (
     <div style={{ position:"fixed", inset:0, background:"#0a0a14", zIndex:0 }}>
       {!loaded && (
-        <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, zIndex:2, background:"#0a0a14" }}>
-          <div style={{ width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#7B6FFF,#4F8EFF)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:36 }}>◈</div>
-          <p style={{ color:"#F0EDE8", fontSize:15, fontFamily:F, margin:0, fontWeight:700 }}>Nexus IA</p>
+        <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, zIndex:2, background:"#0a0a14" }}>
+          <img src={nexusLogo} alt="Nexus" style={{ width:220, height:"auto", objectFit:"contain" }}/>
           <p style={{ color:"rgba(255,255,255,0.35)", fontSize:12, fontFamily:F, margin:0 }}>Cargando tu agente...</p>
-          <div style={{ display:"flex", gap:8, marginTop:8 }}>
-            {[0,1,2].map(i=><div key={i} style={{ width:10, height:10, borderRadius:"50%", background:"#7B6FFF", animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
+          <div style={{ display:"flex", gap:8, marginTop:4 }}>
+            {[0,1,2].map(i=><div key={i} style={{ width:10, height:10, borderRadius:"50%", background:"#00D4FF", animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }}/>)}
           </div>
           <style>{`@keyframes pulse{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.5);opacity:1}}`}</style>
         </div>
