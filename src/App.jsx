@@ -1553,6 +1553,38 @@ function AdminOrders() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
+  // Month selector for export
+  const [exportMonth, setExportMonth] = useState(now.getMonth());
+  const [exportYear, setExportYear] = useState(now.getFullYear());
+
+  const exportOrders = orders.filter(o => {
+    const d = new Date(o.created_at);
+    return d.getMonth() === exportMonth && d.getFullYear() === exportYear;
+  });
+
+  const downloadCSV = () => {
+    const ML2 = { pagomovil:"Pago Movil", binance:"Binance Pay", zinli:"Zinli", paypal:"PayPal", zelle:"Zelle" };
+    const rows = [
+      ["ID", "Fecha", "Cliente", "Metodo", "Productos", "Total USD", "Total Bs", "Estado"]
+    ];
+    exportOrders.forEach(o => {
+      const fecha = new Date(o.created_at).toLocaleDateString("es-VE");
+      const productos = (o.items||[]).map(i=>`${i.quantity}x ${i.name} ${i.amount}`).join(" | ");
+      const metodo = ML2[o.payment_method] || o.payment_method || "";
+      const totalBs = o.total_bs ? Number(o.total_bs).toFixed(2) : "";
+      const estado = { pending:"Pendiente", verified:"Verificado", delivered:"Entregado" }[o.status] || o.status;
+      rows.push([o.id?.slice(0,8).toUpperCase(), fecha, o.customer_email||o.customer_ref||"", metodo, productos, o.total||"", totalBs, estado]);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("
+");
+    const blob = new Blob(["﻿"+csv], { type:"text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const mLabel = new Date(exportYear, exportMonth).toLocaleDateString("es-VE", { month:"long", year:"numeric" });
+    a.href = url; a.download = `pedidos_${mLabel.replace(/ /g,"_")}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Group orders by date
   const today = new Date().toDateString();
   const grouped = orders.reduce((acc, order) => {
@@ -1671,6 +1703,25 @@ function AdminOrders() {
             <p style={{ color:"rgba(255,255,255,0.9)", fontSize:9, fontFamily:F, margin:0 }}>{s.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Export */}
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+        <select value={exportMonth} onChange={e=>setExportMonth(Number(e.target.value))}
+          style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, color:"#F0EDE8", fontSize:12, fontFamily:F, outline:"none" }}>
+          {["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].map((m,i)=>(
+            <option key={i} value={i} style={{ background:"#1a1a2e" }}>{m}</option>
+          ))}
+        </select>
+        <select value={exportYear} onChange={e=>setExportYear(Number(e.target.value))}
+          style={{ width:80, padding:"8px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, color:"#F0EDE8", fontSize:12, fontFamily:F, outline:"none" }}>
+          {[...new Set([exportYear])].map(y=>(
+            <option key={y} value={y} style={{ background:"#1a1a2e" }}>{y}</option>
+          ))}
+        </select>
+        <button onClick={downloadCSV} style={{ padding:"8px 14px", background:"rgba(0,200,150,0.12)", border:"1px solid rgba(0,200,150,0.35)", borderRadius:10, color:"#00C896", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer", whiteSpace:"nowrap" }}>
+          ⬇ Descargar CSV
+        </button>
       </div>
 
       {loading ? <p style={{ color:"rgba(255,255,255,0.9)", textAlign:"center", padding:"40px 0", fontFamily:F }}>Cargando...</p>
