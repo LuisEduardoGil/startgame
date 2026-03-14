@@ -1857,6 +1857,8 @@ function AdminProducts() {
   };
 
   const toggleActive = async (p) => {
+    const action = p.active === false ? "activar" : "ocultar";
+    if (!window.confirm(`¿Deseas ${action} "${p.name}"?`)) return;
     const result = await sb.update("products", p.id, { active:!p.active });
     if (Array.isArray(result) && result.length > 0) {
       const saved = result[0];
