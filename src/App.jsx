@@ -688,7 +688,7 @@ function NexusScreen() {
     <div style={{ position:"fixed", inset:0, background:"#0a0a14", zIndex:0 }}>
       {!loaded && (
         <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, zIndex:2, background:"#0a0a14" }}>
-          <img src={nexusLogo} style={{ width:72, height:72, objectFit:"contain", borderRadius:20 }} alt="Nexus"/>
+          <img src={nexusLogo} style={{ width:108, height:108, objectFit:"contain", borderRadius:20 }} alt="Nexus"/>
           <p style={{ color:"#F0EDE8", fontSize:15, fontFamily:F, margin:0, fontWeight:700 }}>Nexus IA</p>
           <p style={{ color:"rgba(255,255,255,0.35)", fontSize:12, fontFamily:F, margin:0 }}>Cargando tu agente...</p>
           <div style={{ display:"flex", gap:8, marginTop:8 }}>
