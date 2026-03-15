@@ -865,16 +865,17 @@ function HomeScreen({ setScreen, onLogoTap, onAddToCart, onBuyNow, cart, onCartC
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
         <img src={logo} onClick={onLogoTap} style={{ height:60, width:"auto", objectFit:"contain", marginLeft:-8, cursor:"pointer" }}/>
-        <button onClick={()=>setNotifOpen(true)} style={{ position:"relative", width:38, height:38, borderRadius:11, background:COLORS.card, border:`1px solid ${COLORS.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", overflow:"visible" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={unread > 0 ? "#7B6FFF" : COLORS.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        <div onClick={()=>setNotifOpen(true)} style={{ position:"relative", width:38, height:38, borderRadius:11, background:COLORS.card, border:`1px solid ${COLORS.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2a6 6 0 0 0-6 6c0 6-3 8-3 8h18s-3-2-3-8a6 6 0 0 0-6-6z" fill="none" stroke={unread > 0 ? "#7B6FFF" : "#F0EDE8"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke={unread > 0 ? "#7B6FFF" : "#F0EDE8"} strokeWidth="2" strokeLinecap="round"/>
           </svg>
           {unread > 0 && (
             <span style={{ position:"absolute", top:-4, right:-4, background:"#FF4D6A", borderRadius:"50%", minWidth:16, height:16, display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:800, fontFamily:F, color:"#fff", padding:"0 3px", boxShadow:"0 0 6px rgba(255,77,106,0.6)" }}>
               {unread}
             </span>
           )}
-        </button>
+        </div>
       </div>
       {notifOpen && <NotifPanel onClose={()=>setNotifOpen(false)}/>}
 
