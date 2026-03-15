@@ -647,23 +647,21 @@ function HomeScreen({ setScreen, onLogoTap, onAddToCart, onBuyNow, cart, onCartC
   if (detailCard) return <CardDetailScreen card={detailCard} onBack={()=>setDetailCard(null)} onAddToCart={onAddToCart} onBuyNow={onBuyNow} cart={cart} onCartClick={onCartClick} tasa={tasa}/>;
   return (
     <div style={{ padding:"16px 20px", paddingBottom:90, width:"100%", boxSizing:"border-box" }}>
-      {/* Header compacto */}
+      {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-        <img src={logo} onClick={onLogoTap} style={{ height:44, width:"auto", objectFit:"contain", marginLeft:-8, cursor:"pointer" }}/>
+        <img src={logo} onClick={onLogoTap} style={{ height:60, width:"auto", objectFit:"contain", marginLeft:-8, cursor:"pointer" }}/>
         <div style={{ width:32, height:32, borderRadius:9, background:COLORS.card, border:`1px solid ${COLORS.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <span style={{ display:"inline-block", width:7, height:7, borderRadius:"50%", background:COLORS.accent, boxShadow:`0 0 8px ${COLORS.accent}` }}/>
         </div>
       </div>
 
-      {/* Banner compacto */}
-      {banner.visible !== false && <div style={{ background:`linear-gradient(135deg,${COLORS.card} 0%,rgba(26,26,48,0.8) 100%)`, borderRadius:16, padding:"14px 16px", marginBottom:18, border:`1px solid ${COLORS.border}`, position:"relative", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+      {/* Banner */}
+      {banner.visible !== false && <div style={{ background:`linear-gradient(135deg,${COLORS.card} 0%,rgba(26,26,48,0.8) 100%)`, borderRadius:16, padding:"14px 16px", marginBottom:18, border:`1px solid ${COLORS.border}`, position:"relative", overflow:"hidden" }}>
         <div style={{ position:"absolute", top:-20, right:-20, width:100, height:100, borderRadius:"50%", background:"rgba(180,180,255,0.08)", filter:"blur(30px)" }}/>
-        <div style={{ flex:1, minWidth:0 }}>
-          <p style={{ color:COLORS.textMuted, fontSize:10, fontFamily:F, margin:"0 0 3px" }}><GlowDot/>{banner.badge||"NEXUS IA DISPONIBLE"}</p>
-          <h2 style={{ color:COLORS.text, fontSize:15, fontWeight:800, margin:"0 0 2px", lineHeight:1.2, fontFamily:F, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{banner.title}</h2>
-          <p style={{ color:COLORS.textMuted, fontSize:11, margin:0, fontFamily:F, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{banner.subtitle}</p>
-        </div>
-        <button onClick={()=>setScreen("nexus")} style={{ flexShrink:0, background:"rgba(255,255,255,0.15)", color:COLORS.text, border:"1px solid rgba(255,255,255,0.25)", borderRadius:10, padding:"8px 14px", fontSize:11, fontWeight:800, fontFamily:F, cursor:"pointer", backdropFilter:"blur(10px)", whiteSpace:"nowrap" }}>{banner.btn}</button>
+        <p style={{ color:COLORS.textMuted, fontSize:10, fontFamily:F, margin:"0 0 4px" }}><GlowDot/>{banner.badge||"NEXUS IA DISPONIBLE"}</p>
+        <h2 style={{ color:COLORS.text, fontSize:16, fontWeight:800, margin:"0 0 4px", lineHeight:1.3, fontFamily:F }}>{banner.title}</h2>
+        <p style={{ color:COLORS.textMuted, fontSize:12, margin:"0 0 12px", fontFamily:F }}>{banner.subtitle}</p>
+        <button onClick={()=>setScreen("nexus")} style={{ background:"rgba(255,255,255,0.15)", color:COLORS.text, border:"1px solid rgba(255,255,255,0.25)", borderRadius:10, padding:"8px 16px", fontSize:12, fontWeight:800, fontFamily:F, cursor:"pointer", backdropFilter:"blur(10px)" }}>{banner.btn}</button>
       </div>}
 
       <p style={{ color:COLORS.textMuted, fontSize:11, fontFamily:F, marginBottom:12, letterSpacing:"0.1em" }}>POPULARES EN LA TIENDA</p>
