@@ -77,7 +77,6 @@ const sbAuth = {
     return null;
   }
 };
-const ADMIN_PASSWORD = "Dios.luis.k.1234";
 
 const HEADERS = {
   "apikey": SUPABASE_KEY,
@@ -2662,10 +2661,26 @@ function AdminPosts() {
 function AdminLogin({ onSuccess }) {
   const [pass, setPass] = useState("");
   const [error, setError] = useState(false);
-  const try_ = () => {
-    if (pass === ADMIN_PASSWORD) { onSuccess(); }
-    else { setError(true); setTimeout(()=>setError(false), 1500); }
+  const [loading, setLoading] = useState(false);
+
+  const try_ = async () => {
+    if (!pass.trim()) return;
+    setLoading(true);
+    try {
+      const stored = await sb.getSetting("admin_password");
+      if (stored && pass === stored) {
+        onSuccess();
+      } else {
+        setError(true);
+        setTimeout(() => setError(false), 1500);
+      }
+    } catch {
+      setError(true);
+      setTimeout(() => setError(false), 1500);
+    }
+    setLoading(false);
   };
+
   return (
     <div style={{ minHeight:"100vh", background:"#0A0A14", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px" }}>
       <div style={{ width:56, height:56, borderRadius:16, background:"rgba(123,111,255,0.15)", border:"1px solid rgba(123,111,255,0.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, marginBottom:20 }}>🔐</div>
@@ -2680,8 +2695,8 @@ function AdminLogin({ onSuccess }) {
           placeholder="Contraseña de acceso"
           style={{ width:"100%", boxSizing:"border-box", padding:"14px 16px", background:error?"rgba(255,77,106,0.10)":"rgba(255,255,255,0.07)", border:`1px solid ${error?"rgba(255,77,106,0.5)":"rgba(255,255,255,0.15)"}`, borderRadius:12, color:"#fff", fontSize:14, fontFamily:F, outline:"none", marginBottom:12, transition:"all 0.2s" }}
         />
-        <button onClick={try_} style={{ width:"100%", padding:"14px", background:"linear-gradient(135deg,#7B6FFF,#4F8EFF)", border:"none", borderRadius:12, color:"#fff", fontSize:14, fontWeight:800, fontFamily:F, cursor:"pointer" }}>
-          Entrar
+        <button onClick={try_} disabled={loading} style={{ width:"100%", padding:"14px", background:"linear-gradient(135deg,#7B6FFF,#4F8EFF)", border:"none", borderRadius:12, color:"#fff", fontSize:14, fontWeight:800, fontFamily:F, cursor:loading?"not-allowed":"pointer", opacity:loading?0.7:1 }}>
+          {loading ? "Verificando..." : "Entrar"}
         </button>
         {error && <p style={{ color:"#FF4D6A", fontSize:12, fontFamily:F, textAlign:"center", marginTop:8 }}>Contraseña incorrecta</p>}
       </div>
