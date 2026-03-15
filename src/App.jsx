@@ -2758,7 +2758,6 @@ export default function App() {
       <style>{`
         html, body {
           overscroll-behavior: none;
-          overflow: hidden;
         }
         @media (min-width: 600px) {
           .sg-desktop-wrap { max-width: 480px !important; margin: 0 auto !important; position: relative !important; }
