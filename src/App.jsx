@@ -407,10 +407,7 @@ function CardDetailScreen({ card, onBack, onAddToCart, onBuyNow, cart, onCartCli
   const [selectedAmount, setSelectedAmount] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  useEffect(() => {
-    const el = document.querySelector("[data-main-scroll]");
-    if (el) el.scrollTop = 0;
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
   const t = tasa || GLOBAL_TASA;
   const _raw = selectedAmount.replace("$","").trim();
@@ -2606,7 +2603,7 @@ function findProductBySlug(slug) {
 
 export default function App() {
   const [screen, setScreen_] = useState("home");
-  const setScreen = (s) => { setScreen_(s); setTimeout(()=>{ if(mainScrollRef.current) mainScrollRef.current.scrollTop=0; },0); };
+  const setScreen = (s) => { setScreen_(s); setTimeout(()=>{ window.scrollTo(0,0); },0); };
   const [profilePhoto, setProfilePhoto] = useState(null);
   const mainScrollRef = useRef(null);
   const [session, setSession] = useState(() => {
@@ -2673,7 +2670,7 @@ export default function App() {
           methods: newMethods || GLOBAL_METHODS,
         }));
       } catch(e) {}
-      if(mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
+      if(mainScrollRef.current) window.scrollTo(0,0);
       const hashSlug = window.location.hash.replace(/^#\/?/, "");
       if (hashSlug && hashSlug !== "/") {
         const found = findProductBySlug(hashSlug);
@@ -2756,13 +2753,15 @@ export default function App() {
         <div style={{ position:"absolute", bottom:150, left:30, width:220, height:220, borderRadius:"50%", background:"rgba(255,255,255,0.04)", filter:"blur(60px)" }}/>
       </div>
       <style>{`
+        html { background: #08080E; }
+        body { overflow-x: hidden; }
         @media (min-width: 600px) {
           .sg-desktop-wrap { max-width: 480px !important; margin: 0 auto !important; position: relative !important; }
-          .sg-desktop-root { display: flex; justify-content: center; background: #08080E; }
+          .sg-desktop-root { display: flex; justify-content: center; background: #08080E; min-height: 100vh; }
         }
       `}</style>
-      <div ref={mainScrollRef} data-main-scroll className={screen!=="nexus" ? "sg-desktop-root" : ""} style={{ position:"fixed", top:0, left:0, right:0, bottom:0, zIndex:1, overflowY:screen!=="nexus"?"auto":"hidden", overscrollBehaviorY:"contain", WebkitOverflowScrolling:"touch", paddingBottom:screen!=="nexus"?100:0 }}>
-        <div className={screen!=="nexus" ? "sg-desktop-wrap" : ""} style={{ width:"100%", minHeight:"100%" }}>
+      <div ref={mainScrollRef} data-main-scroll className={screen!=="nexus" ? "sg-desktop-root" : ""} style={{ width:"100%", minHeight:"100vh", ...(screen==="nexus" ? { position:"fixed", top:0, left:0, right:0, bottom:0, overflow:"hidden", zIndex:1 } : {}) }}>
+        <div className={screen!=="nexus" ? "sg-desktop-wrap" : ""} style={{ width:"100%", minHeight:"100%", paddingBottom:screen!=="nexus"?100:0 }}>
           {deepLinkCard && <CardDetailScreen card={deepLinkCard} onBack={()=>{ setDeepLinkCard(null); window.location.hash = ""; }} onAddToCart={addToCart} onBuyNow={()=>{ setDeepLinkCard(null); window.location.hash = ""; setCartOpen(false); setCheckoutOpen(true); }} cart={cart} onCartClick={()=>setCartOpen(true)} tasa={GLOBAL_TASA}/>}
           {!deepLinkCard && screen==="home"    && <HomeScreen setScreen={setScreen} onLogoTap={tapLogo} onAddToCart={addToCart} onBuyNow={()=>{ setCartOpen(false); setCheckoutOpen(true); }} cart={cart} onCartClick={()=>setCartOpen(true)}/>}
           {!deepLinkCard && screen==="store"   && <StoreScreen onAddToCart={addToCart} onBuyNow={()=>{ setCartOpen(false); setCheckoutOpen(true); }} cart={cart} onCartClick={()=>setCartOpen(true)}/>}
