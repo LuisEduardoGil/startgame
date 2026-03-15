@@ -2851,38 +2851,10 @@ export default function App() {
       </div>
       <style>{`
         @media (min-width: 600px) {
-          .sg-desktop-wrap { max-width: 480px !important; margin: 0 auto !important; position: relative !important; box-shadow: 0 0 80px rgba(120,80,255,0.08); }
-          .sg-desktop-root { display: flex; justify-content: center; background: #04040A; }
-          .sg-desktop-bg { display: block !important; }
+          .sg-desktop-wrap { max-width: 480px !important; margin: 0 auto !important; position: relative !important; }
+          .sg-desktop-root { display: flex; justify-content: center; background: #08080E; }
         }
-        .sg-desktop-bg { display: none; }
       `}</style>
-
-      {/* Fondo decorativo solo visible en desktop */}
-      <div className="sg-desktop-bg" style={{ position:"fixed", inset:0, zIndex:0, pointerEvents:"none", overflow:"hidden" }}>
-        {/* Grid sutil */}
-        <svg style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0.018 }} xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
-              <path d="M 48 0 L 0 0 0 48" fill="none" stroke="white" strokeWidth="0.8"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)"/>
-        </svg>
-        {/* Glows laterales */}
-        <div style={{ position:"absolute", top:"20%", left:"8%", width:300, height:300, borderRadius:"50%", background:"rgba(120,80,255,0.07)", filter:"blur(100px)" }}/>
-        <div style={{ position:"absolute", bottom:"20%", right:"8%", width:280, height:280, borderRadius:"50%", background:"rgba(60,140,255,0.06)", filter:"blur(100px)" }}/>
-        <div style={{ position:"absolute", top:"55%", left:"15%", width:200, height:200, borderRadius:"50%", background:"rgba(255,80,180,0.04)", filter:"blur(80px)" }}/>
-        <div style={{ position:"absolute", top:"30%", right:"12%", width:220, height:220, borderRadius:"50%", background:"rgba(80,200,255,0.04)", filter:"blur(80px)" }}/>
-        {/* Texto decorativo lateral izquierdo */}
-        <div style={{ position:"absolute", left:40, top:"50%", transform:"translateY(-50%) rotate(-90deg)", transformOrigin:"center", whiteSpace:"nowrap" }}>
-          <p style={{ color:"rgba(255,255,255,0.04)", fontSize:11, fontFamily:F, letterSpacing:"0.4em", fontWeight:700, margin:0 }}>START GAME · GAMING STORE · START GAME · GAMING STORE</p>
-        </div>
-        {/* Texto decorativo lateral derecho */}
-        <div style={{ position:"absolute", right:40, top:"50%", transform:"translateY(-50%) rotate(90deg)", transformOrigin:"center", whiteSpace:"nowrap" }}>
-          <p style={{ color:"rgba(255,255,255,0.04)", fontSize:11, fontFamily:F, letterSpacing:"0.4em", fontWeight:700, margin:0 }}>GIFT CARDS · ENTREGAS INMEDIATAS · GIFT CARDS · ENTREGAS INMEDIATAS</p>
-        </div>
-      </div>
       <div ref={mainScrollRef} data-main-scroll className={screen!=="nexus" ? "sg-desktop-root" : ""} style={{ position:"fixed", top:0, left:0, right:0, bottom:0, zIndex:1, overflowY:screen!=="nexus"?"auto":"hidden", paddingBottom:screen!=="nexus"?100:0 }}>
         <div className={screen!=="nexus" ? "sg-desktop-wrap" : ""} style={{ width:"100%", minHeight:"100%" }}>
           {deepLinkCard && <CardDetailScreen card={deepLinkCard} onBack={()=>{ setDeepLinkCard(null); window.location.hash = ""; }} onAddToCart={addToCart} onBuyNow={()=>{ setDeepLinkCard(null); window.location.hash = ""; setCartOpen(false); setCheckoutOpen(true); }} cart={cart} onCartClick={()=>setCartOpen(true)} tasa={GLOBAL_TASA}/>}
