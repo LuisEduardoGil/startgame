@@ -103,7 +103,7 @@ const sb = {
     return r.json();
   },
   async getAll(table) {
-    const order = table === "orders" ? "?order=created_at.desc" : table === "posts" ? "?order=orden.asc" : "?order=name.asc";
+    const order = table === "orders" ? "?order=created_at.desc" : table === "posts" ? "?order=orden.asc" : table === "notificaciones" ? "?order=orden.asc" : "?order=name.asc";
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${order}&select=*`, {
       headers: HEADERS,
     });
@@ -194,6 +194,20 @@ function usePosts() {
     return () => postsListeners.delete(setPosts);
   }, []);
   return posts;
+}
+
+// ── Global notificaciones store ──
+let GLOBAL_NOTIFS = [];
+const notifsListeners = new Set();
+function setGlobalNotifs(n) { GLOBAL_NOTIFS = n; notifsListeners.forEach(fn => fn(n)); }
+function useNotifs() {
+  const [notifs, setNotifs] = useState(GLOBAL_NOTIFS);
+  useEffect(() => {
+    notifsListeners.add(setNotifs);
+    sb.getAll("notificaciones").then(rows => { if (Array.isArray(rows)) { setGlobalNotifs(rows); setNotifs(rows); } }).catch(()=>{});
+    return () => notifsListeners.delete(setNotifs);
+  }, []);
+  return notifs;
 }
 
 function fmtBs(usd, tasa, usdtOverride) {
@@ -603,7 +617,113 @@ function AutoScrollCards({ cards, onCardClick }) {
   );
 }
 
-/* ── Lo último — sección home ── */
+/* ── Panel de Notificaciones ── */
+function NotifPanel({ onClose }) {
+  const notifs = useNotifs();
+  const activas = notifs.filter(n => n.activa !== false).slice(0, 6);
+  const [leidas, setLeidas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sg_notifs_leidas") || "[]"); } catch { return []; }
+  });
+  const [selected, setSelected] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => setPanelVisible(true)));
+  }, []);
+
+  const close = () => {
+    setPanelVisible(false);
+    setTimeout(onClose, 300);
+  };
+
+  const openNotif = (n) => {
+    const nuevasLeidas = leidas.includes(n.id) ? leidas : [...leidas, n.id];
+    setLeidas(nuevasLeidas);
+    try { localStorage.setItem("sg_notifs_leidas", JSON.stringify(nuevasLeidas)); } catch {}
+    setSelected(n);
+    requestAnimationFrame(() => requestAnimationFrame(() => setModalVisible(true)));
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setTimeout(() => setSelected(null), 280);
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div onClick={close} style={{ position:"fixed", inset:0, zIndex:500, background: panelVisible ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0)", transition:"background 0.3s ease", backdropFilter: panelVisible ? "blur(4px)" : "none" }}/>
+
+      {/* Panel deslizante desde arriba */}
+      <div style={{ position:"fixed", top:0, left:"50%", transform:`translateX(-50%) translateY(${panelVisible ? "0" : "-110%"})`, width:"100%", maxWidth:480, zIndex:501, background:"rgba(14,14,24,0.97)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"0 0 24px 24px", padding:"0 0 16px", transition:"transform 0.35s cubic-bezier(0.34,1.2,0.64,1)", boxShadow:"0 20px 60px rgba(0,0,0,0.6)" }}>
+        {/* Header */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 20px 14px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B6FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <p style={{ color:"#fff", fontSize:14, fontWeight:800, fontFamily:F, margin:0 }}>Notificaciones</p>
+            {activas.filter(n => !leidas.includes(n.id)).length > 0 && (
+              <span style={{ background:"#FF4D6A", borderRadius:10, padding:"1px 7px", color:"#fff", fontSize:10, fontWeight:700, fontFamily:F }}>
+                {activas.filter(n => !leidas.includes(n.id)).length}
+              </span>
+            )}
+          </div>
+          <button onClick={close} style={{ background:"rgba(255,255,255,0.08)", border:"none", borderRadius:8, color:"#F0EDE8", fontSize:18, cursor:"pointer", width:30, height:30, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
+        </div>
+
+        {/* Lista */}
+        <div style={{ padding:"0 16px" }}>
+          {activas.length === 0 ? (
+            <p style={{ color:"rgba(255,255,255,0.3)", fontSize:13, fontFamily:F, textAlign:"center", padding:"24px 0" }}>Sin notificaciones</p>
+          ) : activas.map(n => {
+            const leida = leidas.includes(n.id);
+            return (
+              <div key={n.id} onClick={()=>openNotif(n)}
+                style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"12px", borderRadius:14, marginBottom:8, cursor:"pointer", background: leida ? "rgba(255,255,255,0.02)" : "rgba(123,111,255,0.08)", border:`1px solid ${leida ? "rgba(255,255,255,0.06)" : "rgba(123,111,255,0.2)"}`, transition:"background 0.2s" }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background: leida ? "transparent" : "#7B6FFF", marginTop:5, flexShrink:0, boxShadow: leida ? "none" : "0 0 6px #7B6FFF" }}/>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ color: leida ? "#F0EDE8" : "#fff", fontSize:13, fontWeight: leida ? 400 : 700, fontFamily:F, margin:"0 0 3px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{n.titulo}</p>
+                  {n.cuerpo && <p style={{ color:"rgba(255,255,255,0.4)", fontSize:11, fontFamily:F, margin:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{n.cuerpo}</p>}
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:3 }}>
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal detalle */}
+      {selected && (
+        <div onClick={closeModal} style={{ position:"fixed", inset:0, zIndex:502, display:"flex", alignItems:"center", justifyContent:"center", background: modalVisible ? "rgba(0,0,0,0.85)" : "rgba(0,0,0,0)", transition:"background 0.28s ease" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ width:"92vw", maxWidth:420, borderRadius:20, background:"#1a1a2e", border:"1px solid rgba(255,255,255,0.1)", overflow:"hidden",
+            transform: modalVisible ? "scale(1) translateY(0)" : "scale(0.88) translateY(40px)",
+            opacity: modalVisible ? 1 : 0,
+            transition:"transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.28s ease" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 18px", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7B6FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <p style={{ color:"#7B6FFF", fontSize:11, fontWeight:700, fontFamily:F, margin:0, letterSpacing:"0.08em" }}>NOTIFICACIÓN</p>
+              </div>
+              <button onClick={closeModal} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.5)", fontSize:22, cursor:"pointer", lineHeight:1, padding:0 }}>×</button>
+            </div>
+            <div style={{ padding:"18px" }}>
+              <h3 style={{ color:"#fff", fontSize:16, fontWeight:800, fontFamily:F, margin:"0 0 12px", lineHeight:1.3 }}>{selected.titulo}</h3>
+              {selected.cuerpo && <p style={{ color:"#F0EDE8", fontSize:14, fontFamily:F, margin:0, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{selected.cuerpo}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
 function LoUltimo() {
   const posts = usePosts();
   const activos = posts.filter(p => p.activo !== false).slice(0, 3);
@@ -731,18 +851,32 @@ function HomeScreen({ setScreen, onLogoTap, onAddToCart, onBuyNow, cart, onCartC
   const tasa = useTasa();
   const products = useProducts();
   const banner = useBanner();
+  const notifs = useNotifs();
   const active = products.filter(p => p.active !== false);
   const [detailCard, setDetailCard] = useState(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const leidas = (() => { try { return JSON.parse(localStorage.getItem("sg_notifs_leidas") || "[]"); } catch { return []; } })();
+  const unread = notifs.filter(n => n.activa !== false && !leidas.includes(n.id)).length;
+
   if (detailCard) return <CardDetailScreen card={detailCard} onBack={()=>setDetailCard(null)} onAddToCart={onAddToCart} onBuyNow={onBuyNow} cart={cart} onCartClick={onCartClick} tasa={tasa}/>;
   return (
     <div style={{ padding:"16px 20px", paddingBottom:90, width:"100%", boxSizing:"border-box" }}>
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
         <img src={logo} onClick={onLogoTap} style={{ height:60, width:"auto", objectFit:"contain", marginLeft:-8, cursor:"pointer" }}/>
-        <div style={{ width:32, height:32, borderRadius:9, background:COLORS.card, border:`1px solid ${COLORS.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <span style={{ display:"inline-block", width:7, height:7, borderRadius:"50%", background:COLORS.accent, boxShadow:`0 0 8px ${COLORS.accent}` }}/>
-        </div>
+        <button onClick={()=>setNotifOpen(true)} style={{ position:"relative", width:38, height:38, borderRadius:11, background:COLORS.card, border:`1px solid ${COLORS.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={unread > 0 ? "#7B6FFF" : COLORS.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          {unread > 0 && (
+            <span style={{ position:"absolute", top:-4, right:-4, background:"#FF4D6A", borderRadius:"50%", minWidth:16, height:16, display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:800, fontFamily:F, color:"#fff", padding:"0 3px", boxShadow:"0 0 6px rgba(255,77,106,0.6)" }}>
+              {unread}
+            </span>
+          )}
+        </button>
       </div>
+      {notifOpen && <NotifPanel onClose={()=>setNotifOpen(false)}/>}
 
       {/* Banner */}
       {banner.visible !== false && <div style={{ background:`linear-gradient(135deg,${COLORS.card} 0%,rgba(26,26,48,0.8) 100%)`, borderRadius:16, padding:"14px 16px", marginBottom:18, border:`1px solid ${COLORS.border}`, position:"relative", overflow:"hidden" }}>
@@ -1613,8 +1747,8 @@ function AdminPanel({ onExit }) {
         </div>
         {/* Tabs */}
         <div style={{ display:"flex", gap:0 }}>
-          {[{id:"orders",label:"Pedidos"},{id:"products",label:"Productos"},{id:"posts",label:"Imágenes"},{id:"settings",label:"Ajustes"}].map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, padding:"10px 0", background:"none", border:"none", borderBottom:`2px solid ${tab===t.id?"#7B6FFF":"transparent"}`, color:tab===t.id?"#7B6FFF":"#F0EDE8", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer", transition:"all 0.15s" }}>{t.label}</button>
+          {[{id:"orders",label:"Pedidos"},{id:"products",label:"Productos"},{id:"posts",label:"Imágenes"},{id:"notifs",label:"Notifs"},{id:"settings",label:"Ajustes"}].map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} style={{ flex:1, padding:"10px 0", background:"none", border:"none", borderBottom:`2px solid ${tab===t.id?"#7B6FFF":"transparent"}`, color:tab===t.id?"#7B6FFF":"#F0EDE8", fontSize:11, fontWeight:700, fontFamily:F, cursor:"pointer", transition:"all 0.15s" }}>{t.label}</button>
           ))}
         </div>
       </div>
@@ -1622,6 +1756,7 @@ function AdminPanel({ onExit }) {
         {tab==="orders"   && <AdminOrders/>}
         {tab==="products" && <AdminProducts/>}
         {tab==="posts"    && <AdminPosts/>}
+        {tab==="notifs"   && <AdminNotifs/>}
         {tab==="settings" && <AdminSettings/>}
       </div>
     </div>
@@ -2650,6 +2785,137 @@ function AdminPosts() {
                   </button>
                   <button onClick={()=>openEdit(post)} style={{ padding:"5px 10px", background:"rgba(123,111,255,0.12)", border:"1px solid rgba(123,111,255,0.3)", borderRadius:8, color:"#7B6FFF", fontSize:11, fontFamily:F, cursor:"pointer" }}>Editar</button>
                   <button onClick={()=>remove(post.id)} style={{ padding:"5px 10px", background:"rgba(255,77,106,0.08)", border:"1px solid rgba(255,77,106,0.25)", borderRadius:8, color:"#FF4D6A", fontSize:11, fontFamily:F, cursor:"pointer" }}>Eliminar</button>
+                </div>
+              </div>
+            </div>
+          ))
+      }
+    </div>
+  );
+}
+
+
+/* ── Admin: Notificaciones Tab ── */
+function AdminNotifs() {
+  const [notifs, setNotifs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ titulo:"", cuerpo:"", orden:1, activa:true });
+
+  const load = async () => {
+    setLoading(true);
+    const rows = await sb.getAll("notificaciones");
+    if (Array.isArray(rows)) { setNotifs(rows); setGlobalNotifs(rows); }
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const openAdd = () => {
+    if (notifs.filter(n=>n.activa!==false).length >= 6) { alert("Máximo 6 notificaciones activas"); return; }
+    setEditing(null);
+    setForm({ titulo:"", cuerpo:"", orden: notifs.length + 1, activa:true });
+    setShowForm(true);
+  };
+  const openEdit = (n) => {
+    setEditing(n);
+    setForm({ titulo:n.titulo||"", cuerpo:n.cuerpo||"", orden:n.orden||1, activa:n.activa!==false });
+    setShowForm(true);
+  };
+  const cancel = () => { setShowForm(false); setEditing(null); };
+
+  const save = async () => {
+    if (!form.titulo.trim()) return;
+    setSaving(true);
+    const payload = { titulo:form.titulo.trim(), cuerpo:form.cuerpo.trim(), orden:Number(form.orden)||1, activa:form.activa };
+    if (editing) await sb.update("notificaciones", editing.id, payload);
+    else await sb.insert("notificaciones", payload);
+    setSaving(false);
+    setShowForm(false);
+    setEditing(null);
+    load();
+  };
+
+  const remove = async (id) => {
+    if (!window.confirm("¿Eliminar esta notificación?")) return;
+    await sb.delete("notificaciones", id);
+    load();
+  };
+
+  const toggleActiva = async (n) => {
+    if (!n.activa && notifs.filter(x=>x.activa!==false).length >= 6) { alert("Máximo 6 notificaciones activas"); return; }
+    await sb.update("notificaciones", n.id, { activa: !n.activa });
+    load();
+  };
+
+  const inp = { width:"100%", boxSizing:"border-box", padding:"10px 12px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, color:"#fff", fontSize:13, fontFamily:F, outline:"none", marginBottom:10 };
+  const lbl = { color:"#F0EDE8", fontSize:10, fontFamily:F, margin:"0 0 4px", display:"block" };
+
+  if (showForm) return (
+    <div style={{ padding:16 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+        <button onClick={cancel} style={{ background:"none", border:"none", color:"#7B6FFF", fontSize:20, cursor:"pointer", padding:0 }}>←</button>
+        <h3 style={{ color:"#fff", fontSize:15, fontWeight:800, fontFamily:F, margin:0 }}>{editing ? "Editar notificación" : "Nueva notificación"}</h3>
+      </div>
+
+      <label style={lbl}>Título</label>
+      <input value={form.titulo} onChange={e=>setForm(p=>({...p,titulo:e.target.value}))} placeholder="Ej: ¡Nueva oferta disponible!" style={inp}/>
+
+      <label style={lbl}>Cuerpo <span style={{ color:"rgba(255,255,255,0.3)" }}>(texto completo)</span></label>
+      <textarea value={form.cuerpo} onChange={e=>setForm(p=>({...p,cuerpo:e.target.value}))} placeholder="Escribe el contenido de la notificación..." rows={5}
+        style={{ ...inp, resize:"vertical", lineHeight:1.6 }}/>
+
+      <label style={lbl}>Orden <span style={{ color:"rgba(255,255,255,0.3)" }}>(1 aparece primero)</span></label>
+      <input type="number" value={form.orden} onChange={e=>setForm(p=>({...p,orden:e.target.value}))} style={{ ...inp, width:80 }}/>
+
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+        <span style={{ color:"#F0EDE8", fontSize:10, fontFamily:F }}>Visible en la app</span>
+        <button onClick={()=>setForm(p=>({...p,activa:!p.activa}))} style={{ width:40, height:22, borderRadius:11, background:form.activa?"#7B6FFF":"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", position:"relative", transition:"background 0.2s" }}>
+          <span style={{ position:"absolute", top:3, left:form.activa?20:3, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left 0.2s" }}/>
+        </button>
+      </div>
+
+      <div style={{ display:"flex", gap:8 }}>
+        <button onClick={cancel} style={{ flex:1, padding:"10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, color:"#F0EDE8", fontSize:12, fontFamily:F, cursor:"pointer" }}>Cancelar</button>
+        <button disabled={saving||!form.titulo.trim()} onClick={save}
+          style={{ flex:2, padding:"10px", background:(!saving&&form.titulo.trim())?"linear-gradient(135deg,#7B6FFF,#4F8EFF)":"rgba(255,255,255,0.05)", border:"none", borderRadius:10, color:(!saving&&form.titulo.trim())?"#fff":"rgba(255,255,255,0.3)", fontSize:12, fontWeight:800, fontFamily:F, cursor:(!saving&&form.titulo.trim())?"pointer":"not-allowed" }}>
+          {saving ? "Guardando..." : "💾 Guardar"}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding:16 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+        <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.08em", margin:0 }}>
+          🔔 NOTIFICACIONES ({notifs.filter(n=>n.activa!==false).length}/6 activas)
+        </p>
+        <button onClick={openAdd} style={{ padding:"7px 14px", background:"linear-gradient(135deg,#7B6FFF,#4F8EFF)", border:"none", borderRadius:10, color:"#fff", fontSize:12, fontWeight:700, fontFamily:F, cursor:"pointer" }}>+ Nueva</button>
+      </div>
+
+      {loading
+        ? <p style={{ color:"rgba(255,255,255,0.5)", textAlign:"center", padding:"40px 0", fontFamily:F }}>Cargando...</p>
+        : notifs.length === 0
+          ? <p style={{ color:"#F0EDE8", textAlign:"center", padding:"40px 0", fontFamily:F }}>Sin notificaciones aún</p>
+          : notifs.map(n => (
+            <div key={n.id} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:14, padding:"12px 14px", marginBottom:10 }}>
+              <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background: n.activa!==false ? "#7B6FFF" : "rgba(255,255,255,0.2)", marginTop:5, flexShrink:0 }}/>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:F, margin:"0 0 2px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{n.titulo}</p>
+                  {n.cuerpo && <p style={{ color:"rgba(255,255,255,0.4)", fontSize:11, fontFamily:F, margin:"0 0 8px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{n.cuerpo}</p>}
+                  <p style={{ color:"rgba(255,255,255,0.3)", fontSize:10, fontFamily:F, margin:"0 0 8px" }}>
+                    #{n.orden} · {n.activa!==false ? <span style={{ color:"#00C896" }}>Activa</span> : <span style={{ color:"#FF4D6A" }}>Oculta</span>}
+                  </p>
+                  <div style={{ display:"flex", gap:6 }}>
+                    <button onClick={()=>toggleActiva(n)} style={{ padding:"5px 10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#F0EDE8", fontSize:11, fontFamily:F, cursor:"pointer" }}>
+                      {n.activa!==false ? "Ocultar" : "Mostrar"}
+                    </button>
+                    <button onClick={()=>openEdit(n)} style={{ padding:"5px 10px", background:"rgba(123,111,255,0.12)", border:"1px solid rgba(123,111,255,0.3)", borderRadius:8, color:"#7B6FFF", fontSize:11, fontFamily:F, cursor:"pointer" }}>Editar</button>
+                    <button onClick={()=>remove(n.id)} style={{ padding:"5px 10px", background:"rgba(255,77,106,0.08)", border:"1px solid rgba(255,77,106,0.25)", borderRadius:8, color:"#FF4D6A", fontSize:11, fontFamily:F, cursor:"pointer" }}>Eliminar</button>
+                  </div>
                 </div>
               </div>
             </div>
