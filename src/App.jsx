@@ -679,7 +679,7 @@ function LoUltimo() {
                   </svg>
                 </div>
                 <div>
-                  <p style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:F, margin:0 }}>startgame.app</p>
+                  <p style={{ color:"#fff", fontSize:13, fontWeight:700, fontFamily:F, margin:0 }}>startgame_store</p>
                   {preview.titulo && <p style={{ color:"rgba(255,255,255,0.5)", fontSize:10, fontFamily:F, margin:0 }}>{preview.titulo}</p>}
                 </div>
               </div>
