@@ -611,7 +611,8 @@ function LoUltimo() {
   if (!activos.length) return null;
   return (
     <div style={{ marginTop:28 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:12 }}>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:10 }}>
         <p style={{ color:COLORS.textMuted, fontSize:11, fontFamily:F, margin:0, letterSpacing:"0.1em" }}>LO ÚLTIMO</p>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <rect x="2" y="2" width="20" height="20" rx="5" stroke="#E1306C" strokeWidth="2"/>
@@ -619,15 +620,16 @@ function LoUltimo() {
           <circle cx="17.5" cy="6.5" r="1.2" fill="#E1306C"/>
         </svg>
       </div>
-      <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}
-        onScroll={e => e.stopPropagation()}>
+      {/* Contenedor oscuro con las 3 imágenes */}
+      <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:10, display:"flex", gap:8 }}>
         {activos.map(post => (
-          <div key={post.id} onClick={()=> post.link && window.open(post.link,"_blank")}
-            style={{ flexShrink:0, width:"72vw", maxWidth:260, scrollSnapAlign:"start", borderRadius:15, overflow:"hidden", cursor:post.link?"pointer":"default", background:"#0d0d1a", border:"1px solid rgba(255,255,255,0.07)" }}>
+          <div key={post.id}
+            onClick={()=> post.link && window.open(post.link,"_blank")}
+            style={{ flex:1, borderRadius:15, overflow:"hidden", cursor:post.link?"pointer":"default", background:"#0d0d1a" }}>
             <img
               src={post.img_url}
               alt={post.titulo||""}
-              style={{ width:"100%", height:"auto", display:"block", borderRadius:15 }}
+              style={{ width:"100%", height:"auto", display:"block" }}
             />
           </div>
         ))}
