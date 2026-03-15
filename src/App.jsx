@@ -714,7 +714,16 @@ function NotifPanel({ onClose }) {
             </div>
             <div style={{ padding:"18px" }}>
               <h3 style={{ color:"#fff", fontSize:16, fontWeight:800, fontFamily:F, margin:"0 0 12px", lineHeight:1.3 }}>{selected.titulo}</h3>
-              {selected.cuerpo && <p style={{ color:"#F0EDE8", fontSize:14, fontFamily:F, margin:0, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{selected.cuerpo}</p>}
+              {selected.cuerpo && <p style={{ color:"#F0EDE8", fontSize:14, fontFamily:F, margin:"0 0 16px", lineHeight:1.7, whiteSpace:"pre-wrap" }}>{selected.cuerpo}</p>}
+              {selected.btn_label && selected.btn_url && (
+                <a href={selected.btn_url} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"11px 16px", background:"linear-gradient(135deg,#7B6FFF,#4F8EFF)", borderRadius:12, color:"#fff", fontSize:13, fontWeight:800, fontFamily:F, textDecoration:"none" }}>
+                  {selected.btn_label}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -2803,7 +2812,7 @@ function AdminNotifs() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ titulo:"", cuerpo:"", orden:1, activa:true });
+  const [form, setForm] = useState({ titulo:"", cuerpo:"", btn_label:"", btn_url:"", orden:1, activa:true });
 
   const load = async () => {
     setLoading(true);
@@ -2816,12 +2825,12 @@ function AdminNotifs() {
   const openAdd = () => {
     if (notifs.filter(n=>n.activa!==false).length >= 6) { alert("Máximo 6 notificaciones activas"); return; }
     setEditing(null);
-    setForm({ titulo:"", cuerpo:"", orden: notifs.length + 1, activa:true });
+    setForm({ titulo:"", cuerpo:"", btn_label:"", btn_url:"", orden: notifs.length + 1, activa:true });
     setShowForm(true);
   };
   const openEdit = (n) => {
     setEditing(n);
-    setForm({ titulo:n.titulo||"", cuerpo:n.cuerpo||"", orden:n.orden||1, activa:n.activa!==false });
+    setForm({ titulo:n.titulo||"", cuerpo:n.cuerpo||"", btn_label:n.btn_label||"", btn_url:n.btn_url||"", orden:n.orden||1, activa:n.activa!==false });
     setShowForm(true);
   };
   const cancel = () => { setShowForm(false); setEditing(null); };
@@ -2829,7 +2838,7 @@ function AdminNotifs() {
   const save = async () => {
     if (!form.titulo.trim()) return;
     setSaving(true);
-    const payload = { titulo:form.titulo.trim(), cuerpo:form.cuerpo.trim(), orden:Number(form.orden)||1, activa:form.activa };
+    const payload = { titulo:form.titulo.trim(), cuerpo:form.cuerpo.trim(), btn_label:form.btn_label.trim()||null, btn_url:form.btn_url.trim()||null, orden:Number(form.orden)||1, activa:form.activa };
     if (editing) await sb.update("notificaciones", editing.id, payload);
     else await sb.insert("notificaciones", payload);
     setSaving(false);
@@ -2866,6 +2875,12 @@ function AdminNotifs() {
       <label style={lbl}>Cuerpo <span style={{ color:"rgba(255,255,255,0.3)" }}>(texto completo)</span></label>
       <textarea value={form.cuerpo} onChange={e=>setForm(p=>({...p,cuerpo:e.target.value}))} placeholder="Escribe el contenido de la notificación..." rows={5}
         style={{ ...inp, resize:"vertical", lineHeight:1.6 }}/>
+
+      <label style={lbl}>Texto del botón <span style={{ color:"rgba(255,255,255,0.3)" }}>(opcional — ej: Ver ofertas)</span></label>
+      <input value={form.btn_label} onChange={e=>setForm(p=>({...p,btn_label:e.target.value}))} placeholder="Ej: Ver ofertas en Steam" style={inp}/>
+
+      <label style={lbl}>URL del botón <span style={{ color:"rgba(255,255,255,0.3)" }}>(opcional)</span></label>
+      <input value={form.btn_url} onChange={e=>setForm(p=>({...p,btn_url:e.target.value}))} placeholder="https://..." style={inp}/>
 
       <label style={lbl}>Orden <span style={{ color:"rgba(255,255,255,0.3)" }}>(1 aparece primero)</span></label>
       <input type="number" value={form.orden} onChange={e=>setForm(p=>({...p,orden:e.target.value}))} style={{ ...inp, width:80 }}/>
