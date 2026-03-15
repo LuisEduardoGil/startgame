@@ -1345,7 +1345,13 @@ function OrderStatusScreen({ orderId, onBack }) {
       <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 24px" }}>
         <div style={{ width:"100%", maxWidth:340 }}>
           <div style={{ background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:24, padding:"28px 24px", textAlign:"center", marginBottom:20 }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>📋</div>
+            <div style={{ fontSize:48, marginBottom:12 }}>
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+            </div>
             <h3 style={{ color:"#25D366", fontSize:20, fontWeight:800, fontFamily:F, margin:"0 0 8px" }}>Pedido registrado</h3>
             <p style={{ color:COLORS.textMuted, fontSize:13, fontFamily:F, margin:0, lineHeight:1.5 }}>Tu pedido fue recibido. Para completarlo, envía tu comprobante de pago por WhatsApp.</p>
           </div>
@@ -1360,9 +1366,25 @@ function OrderStatusScreen({ orderId, onBack }) {
                   </div>
                 </div>
               ))}
-              <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:10, paddingTop:10, display:"flex", justifyContent:"space-between" }}>
-                <p style={{ color:COLORS.textMuted, fontSize:12, fontFamily:F, margin:0 }}>Ref. pago</p>
-                <p style={{ color:COLORS.text, fontSize:12, fontWeight:700, fontFamily:F, margin:0 }}>{order.customer_ref}</p>
+              <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", marginTop:10, paddingTop:10 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <p style={{ color:COLORS.textMuted, fontSize:12, fontFamily:F, margin:0 }}>Ref. pago</p>
+                  <p style={{ color:COLORS.text, fontSize:12, fontWeight:700, fontFamily:F, margin:0 }}>{order.customer_ref}</p>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <p style={{ color:COLORS.textMuted, fontSize:12, fontFamily:F, margin:0 }}>Método</p>
+                  <p style={{ color:COLORS.text, fontSize:12, fontWeight:700, fontFamily:F, margin:0 }}>
+                    {{pagomovil:"📱 Pago Móvil", binance:"🟡 Binance Pay", zinli:"💜 Zinli", paypal:"🔷 PayPal"}[order.payment_method] || order.payment_method}
+                  </p>
+                </div>
+                {order.total_bs && (
+                  <div style={{ display:"flex", justifyContent:"space-between" }}>
+                    <p style={{ color:COLORS.textMuted, fontSize:12, fontFamily:F, margin:0 }}>Total</p>
+                    <p style={{ color:"#25D366", fontSize:13, fontWeight:800, fontFamily:F, margin:0 }}>
+                      Bs. {Number(order.total_bs).toLocaleString("es-VE", {minimumFractionDigits:2, maximumFractionDigits:2})}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
