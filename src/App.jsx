@@ -647,7 +647,7 @@ function LoUltimo() {
       <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:10, display:"flex", gap:8 }}>
         {activos.map(post => (
           <div key={post.id} onClick={()=>openPreview(post)}
-            style={{ flex:1, borderRadius:15, overflow:"hidden", cursor:"pointer", background:"#0d0d1a" }}>
+            style={{ flex:1, borderRadius:10, overflow:"hidden", cursor:"pointer", background:"#0d0d1a" }}>
             <img src={post.img_url} alt={post.titulo||""} style={{ width:"100%", height:"auto", display:"block" }}/>
           </div>
         ))}
