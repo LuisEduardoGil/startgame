@@ -1217,6 +1217,7 @@ function CheckoutScreen({ cart, onBack, onOrderCreated, session }) {
             status: "verified",
             manual_delivery: isManual
           });
+          console.log("Supabase insert result:", JSON.stringify(result));
           // Acepta cualquier formato de respuesta válido de Supabase
           const orderId = result?.[0]?.id || result?.id || null;
           if (orderId) {
