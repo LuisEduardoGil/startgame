@@ -918,6 +918,10 @@ function StoreScreen({ onAddToCart, onBuyNow, cart, onCartClick }) {
     const matchCat = filter==="Todos" || cats.includes(filter);
     const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
+  }).sort((a, b) => {
+    if (a.low_priority && !b.low_priority) return 1;
+    if (!a.low_priority && b.low_priority) return -1;
+    return 0;
   });
   return (
     <div style={{ padding:"24px 20px", paddingBottom:100 }}>
@@ -2235,6 +2239,15 @@ function ProductFormPanel({ form, setForm, editing, saving, saveProduct, onCance
           <span style={{ position:"absolute", top:3, left:form.manual_delivery?20:3, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left 0.2s" }}/>
         </button>
       </div>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+        <div style={{ flex:1 }}>
+          <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, margin:0 }}>⬇ Baja prioridad</p>
+          <p style={{ color:"rgba(255,255,255,0.3)", fontSize:9, fontFamily:F, margin:"2px 0 0" }}>Aparece al final de la lista (ej: streaming)</p>
+        </div>
+        <button onClick={()=>setForm(p=>({...p,low_priority:!p.low_priority}))} style={{ width:40, height:22, borderRadius:11, background:form.low_priority?"#FF4D6A":"rgba(255,255,255,0.12)", border:"none", cursor:"pointer", position:"relative", transition:"background 0.2s", flexShrink:0 }}>
+          <span style={{ position:"absolute", top:3, left:form.low_priority?20:3, width:16, height:16, borderRadius:"50%", background:"#fff", transition:"left 0.2s" }}/>
+        </button>
+      </div>
       <div style={{ display:"flex", gap:8 }}>
         <button onClick={onCancel} style={{ flex:1, padding:"10px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:10, color:"#F0EDE8", fontSize:12, fontFamily:F, cursor:"pointer" }}>Cancelar</button>
         <button disabled={saving||!form.name||!form.amounts} onClick={saveProduct} style={{ flex:2, padding:"10px", background:(!saving&&form.name&&form.amounts)?"linear-gradient(135deg,#7B6FFF,#4F8EFF)":"rgba(255,255,255,0.05)", border:"none", borderRadius:10, color:(!saving&&form.name&&form.amounts)?"#fff":"rgba(255,255,255,0.3)", fontSize:12, fontWeight:800, fontFamily:F, cursor:(!saving&&form.name&&form.amounts)?"pointer":"not-allowed" }}>
@@ -2260,13 +2273,13 @@ function AdminProducts() {
     const usdtFields = {};
     (p.amounts||[]).forEach(a => { usdtFields[`usdt_${String(a)}`] = (p.usdt_prices||{})[String(a)]||""; });
     const cats = Array.isArray(p.category) ? p.category : [p.category].filter(Boolean);
-    setForm({ _id: p.id, _original_name: p.name, name:p.name, category:cats, tag:p.tag||"", amounts:(p.amounts||[]).join(", "), active:p.active!==false, featured:p.featured||false, img_url:p.img_url||"", description:p.description||"", manual_delivery:p.manual_delivery||false, ...usdtFields });
+    setForm({ _id: p.id, _original_name: p.name, name:p.name, category:cats, tag:p.tag||"", amounts:(p.amounts||[]).join(", "), active:p.active!==false, featured:p.featured||false, img_url:p.img_url||"", description:p.description||"", manual_delivery:p.manual_delivery||false, low_priority:p.low_priority||false, ...usdtFields });
   };
 
   const startAdd = () => {
     setEditing(null);
     setShowAdd(true);
-    setForm({ name:"", category:[], tag:"", amounts:"", active:true, featured:false, img_url:"", description:"", manual_delivery:false });
+    setForm({ name:"", category:[], tag:"", amounts:"", active:true, featured:false, img_url:"", description:"", manual_delivery:false, low_priority:false });
   };
 
   const saveProduct = async () => {
@@ -2275,7 +2288,7 @@ function AdminProducts() {
     const usdtPrices = {};
     amountsArr.forEach(a => { const v = parseFloat(form[`usdt_${a}`]); if (!isNaN(v)) usdtPrices[String(a)] = v; });
     const catsArr = Array.isArray(form.category) ? form.category : [form.category].filter(Boolean);
-    const payload = { name:form.name, category:catsArr, tag:form.tag||null, amounts:amountsArr, usdt_prices:Object.keys(usdtPrices).length>0 ? usdtPrices : null, active:form.active, featured:form.featured||false, img_url:form.img_url||null, original_name: form._original_name||null, description:form.description||null, manual_delivery:form.manual_delivery||false };
+    const payload = { name:form.name, category:catsArr, tag:form.tag||null, amounts:amountsArr, usdt_prices:Object.keys(usdtPrices).length>0 ? usdtPrices : null, active:form.active, featured:form.featured||false, img_url:form.img_url||null, original_name: form._original_name||null, description:form.description||null, manual_delivery:form.manual_delivery||false, low_priority:form.low_priority||false };
     let result;
     const productId = form._id || (editing && editing.id);
     console.log("Saving with productId:", productId, "form._id:", form._id, "editing.id:", editing?.id);
