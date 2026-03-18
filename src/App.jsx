@@ -2690,20 +2690,23 @@ function AdminPosts() {
     setUploadError("");
     try {
       const compressed = await compressImage(file);
-      const fileName = `post_${Date.now()}.jpg`;
-      const r = await fetch(`${SUPABASE_URL}/storage/v1/object/posts/${fileName}`, {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "image/jpeg",
-          "x-upsert": "true",
-        },
-        body: compressed,
+      // Convertir blob a base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(compressed);
       });
-      if (!r.ok) { const e = await r.json(); throw new Error(e.message || "Error al subir"); }
-      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/posts/${fileName}`;
-      setForm(p => ({ ...p, img_url: publicUrl }));
+      // Subir a imgbb (gratis, sin límite de bandwidth)
+      const formData = new FormData();
+      formData.append("image", base64);
+      const r = await fetch("https://api.imgbb.com/1/upload?key=8aaeda2ee6569a4e928c4c627caeadf4", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.error?.message || "Error al subir");
+      setForm(p => ({ ...p, img_url: data.data.url }));
     } catch(e) {
       setUploadError(e.message || "Error al subir");
     }
