@@ -21,7 +21,7 @@ const SUPABASE_URL = "https://zacdqpvhnlgtbgurfqac.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphY2RxcHZobmxndGJndXJmcWFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1ODQzNjksImV4cCI6MjA4ODE2MDM2OX0.yFPCd6MfcT-wCRC1PELVu0YIyWxbozjHpsB63bo8zjs";
 
 // ─── RESEND CONFIG ───────────────────────────────────────────────
-const RESEND_API_KEY = "re_Duch2Gnq_BytxT55CVVjH7YP6p3HoYEMR";
+const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || "re_Duch2Gnq_BytxT55CVVjH7YP6p3HoYEMR";
 const FROM_EMAIL     = "Start Game <noreply@startgame.app>";
 
 async function sendGiftEmail({ to_email, order_id, gift_code, items, payment_method, total, total_bs }) {
@@ -2569,7 +2569,7 @@ function ProductImageUploader({ form, setForm }) {
       });
       const formData = new FormData();
       formData.append("image", base64);
-      const r = await fetch("https://api.imgbb.com/1/upload?key=8aaeda2ee6569a4e928c4c627caeadf4", { method:"POST", body:formData });
+      const r = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_KEY||"8aaeda2ee6569a4e928c4c627caeadf4"}`, { method:"POST", body:formData });
       const data = await r.json();
       if (!data.success) throw new Error(data.error?.message || "Error al subir");
       setForm(p => ({ ...p, img_url: data.data.url }));
@@ -3626,7 +3626,7 @@ function AdminPosts() {
       // Subir a imgbb (gratis, sin límite de bandwidth)
       const formData = new FormData();
       formData.append("image", base64);
-      const r = await fetch("https://api.imgbb.com/1/upload?key=8aaeda2ee6569a4e928c4c627caeadf4", {
+      const r = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_KEY||"8aaeda2ee6569a4e928c4c627caeadf4"}`, {
         method: "POST",
         body: formData,
       });
