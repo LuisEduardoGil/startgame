@@ -3882,7 +3882,7 @@ function AdminNotifs() {
 
 
 /* ─── ADMIN LOGIN ─── */
-const ADMIN_2FA_EMAIL = "gil751630@gmail.com";
+const ADMIN_2FA_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "gil751630@gmail.com";
 
 async function send2FACode(code) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/send-order-email`, {
