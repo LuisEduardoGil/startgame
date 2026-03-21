@@ -1810,9 +1810,31 @@ function CheckoutScreen({ cart, onBack, onOrderCreated, session }) {
 }
 
 /* ─── ORDER STATUS SCREEN ─── */
+function playDeliveryChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+  } catch(e) {}
+}
+
 function OrderStatusScreen({ orderId, onBack }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const chimePlayed = useRef(false);
 
   useEffect(() => {
     let unsub;
@@ -1820,10 +1842,18 @@ function OrderStatusScreen({ orderId, onBack }) {
       const row = await sb.getOne("orders", orderId);
       setOrder(row);
       setLoading(false);
+      if (row?.status === "delivered" && !chimePlayed.current) {
+        chimePlayed.current = true;
+        playDeliveryChime();
+      }
     };
     load();
     unsub = sb.subscribe("orders", orderId, (row) => {
       setOrder(row);
+      if (row?.status === "delivered" && !chimePlayed.current) {
+        chimePlayed.current = true;
+        playDeliveryChime();
+      }
     });
     return () => { if (unsub) unsub(); };
   }, [orderId]);
