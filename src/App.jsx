@@ -413,7 +413,15 @@ function ProfileIcon({ active, photo }) {
 }
 function GamesIcon({ active }) {
   const c = active ? COLORS.accent : COLORS.textMuted;
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={active?2.2:1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="12" x2="17" y2="12"/></svg>;
+  const sw = active ? 2.2 : 1.8;
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2"  y="2"  width="9" height="9"  rx="2"/>
+      <rect x="14" y="2"  width="9" height="9"  rx="2"/>
+      <rect x="2"  y="14" width="9" height="9"  rx="2"/>
+      <rect x="14" y="14" width="9" height="9"  rx="2"/>
+    </svg>
+  );
 }
 function BottomNav({ active, setActive, cartCount, onCartClick }) {
   const items = [{ id:"home", label:"Inicio" }, { id:"store", label:"Tienda" }, { id:"games", label:"Juegos" }, { id:"nexus", label:"Nexus IA" }];
