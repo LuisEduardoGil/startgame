@@ -3908,7 +3908,7 @@ async function send2FACode(code) {
 }
 
 function AdminLogin({ onSuccess }) {
-  const [step, setStep] = useState("password"); // "password" | "code"
+  const [step, setStep] = useState("password");
   const [pass, setPass] = useState("");
   const [code, setCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -3917,6 +3917,34 @@ function AdminLogin({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  const CACHE_KEY = "sg_2fa_cache";
+  const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
+
+  const getIP = async () => {
+    try {
+      const r = await fetch("https://api.ipify.org?format=json");
+      const d = await r.json();
+      return d.ip || "unknown";
+    } catch { return "unknown"; }
+  };
+
+  const is2FAValid = async () => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      if (!cached) return false;
+      if (Date.now() - cached.timestamp > CACHE_TTL) return false;
+      const ip = await getIP();
+      return cached.ip === ip;
+    } catch { return false; }
+  };
+
+  const save2FACache = async () => {
+    try {
+      const ip = await getIP();
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ip, timestamp: Date.now() }));
+    } catch {}
+  };
 
   // Countdown timer
   useEffect(() => {
@@ -3932,11 +3960,17 @@ function AdminLogin({ onSuccess }) {
     try {
       const stored = await sb.getSetting("admin_password");
       if (stored && pass === stored) {
+        // Verificar si ya pasó 2FA desde esta IP en las últimas 24h
+        const valid = await is2FAValid();
+        if (valid) {
+          onSuccess();
+          setLoading(false);
+          return;
+        }
         // Generar código de 6 dígitos
         const newCode = String(Math.floor(100000 + Math.random() * 900000));
         setGeneratedCode(newCode);
-        setCodeExpiry(Date.now() + 5 * 60 * 1000); // 5 min
-        // Intentar enviar email — si falla, entrar directamente
+        setCodeExpiry(Date.now() + 5 * 60 * 1000);
         try {
           const sent = await send2FACode(newCode);
           if (sent) {
@@ -3944,11 +3978,9 @@ function AdminLogin({ onSuccess }) {
             setSent(true);
             setCountdown(60);
           } else {
-            // Email falló — entrar sin 2FA por ahora
             onSuccess();
           }
         } catch {
-          // Email falló — entrar sin 2FA por ahora
           onSuccess();
         }
       } else {
@@ -3968,6 +4000,7 @@ function AdminLogin({ onSuccess }) {
       return;
     }
     if (code.trim() === generatedCode) {
+      save2FACache(); // Guardar IP + timestamp
       onSuccess();
     } else {
       setError("Código incorrecto");
