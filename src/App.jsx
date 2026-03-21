@@ -4088,7 +4088,12 @@ function findProductBySlug(slug) {
 
 export default function App() {
   const [screen, setScreen_] = useState("home");
-  const setScreen = (s) => { setScreen_(s); setTimeout(()=>{ if(mainScrollRef.current) mainScrollRef.current.scrollTop=0; },0); };
+  const setScreen = (s) => {
+    setScreen_(s);
+    setDeepLinkCard(null);
+    window.location.hash = "";
+    setTimeout(()=>{ if(mainScrollRef.current) mainScrollRef.current.scrollTop=0; },0);
+  };
   const [profilePhoto, setProfilePhoto] = useState(null);
   const mainScrollRef = useRef(null);
   const [session, setSession] = useState(() => {
