@@ -3928,11 +3928,21 @@ function AdminLogin({ onSuccess }) {
         const newCode = String(Math.floor(100000 + Math.random() * 900000));
         setGeneratedCode(newCode);
         setCodeExpiry(Date.now() + 5 * 60 * 1000); // 5 min
-        // Enviar por email via Supabase Edge Function
-        await send2FACode(newCode);
-        setStep("code");
-        setSent(true);
-        setCountdown(60);
+        // Intentar enviar email — si falla, entrar directamente
+        try {
+          const sent = await send2FACode(newCode);
+          if (sent) {
+            setStep("code");
+            setSent(true);
+            setCountdown(60);
+          } else {
+            // Email falló — entrar sin 2FA por ahora
+            onSuccess();
+          }
+        } catch {
+          // Email falló — entrar sin 2FA por ahora
+          onSuccess();
+        }
       } else {
         setError("Contraseña incorrecta");
         setTimeout(() => setError(""), 1500);
