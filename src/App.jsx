@@ -1991,7 +1991,7 @@ function OrderStatusScreen({ orderId, onBack }) {
                       const fallbackIcon = {"pagomovil":"📱","binance":"🟡","zinli":"💜","paypal":"🔷"}[order?.payment_method] || "💳";
                       const fallbackLabel = {"pagomovil":"Pago Móvil","binance":"Binance Pay","zinli":"Zinli","paypal":"PayPal"}[order?.payment_method] || order?.payment_method;
                       return (
-                        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
                           {m?.logo_url
                             ? <div style={{ width:36, height:36, borderRadius:10, background:"rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden" }}>
                                 <img src={m.logo_url} style={{ width:28, height:28, objectFit:"contain" }} alt={m.label}/>
