@@ -1993,7 +1993,11 @@ function OrderStatusScreen({ orderId, onBack }) {
                   <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
                     <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 4px" }}>Monto pagado</p>
                     <p style={{ color:"#ffffff", fontSize:22, fontWeight:900, fontFamily:F, margin:0 }}>
-                      {order?.total_bs ? `Bs. ${Number(order.total_bs).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
+                      {order?.payment_method === "binance"
+                        ? `${Number(order?.total_usdt || 0).toFixed(2)} USDT`
+                        : order?.payment_method === "zinli" || order?.payment_method === "paypal"
+                        ? `$${Number(order?.total_usdt || 0).toFixed(2)} USD`
+                        : order?.total_bs ? `Bs. ${Number(order.total_bs).toLocaleString("es-VE",{minimumFractionDigits:2,maximumFractionDigits:2})}` : "—"}
                     </p>
                   </div>
                   {order?.items && order.items.length > 0 && (
