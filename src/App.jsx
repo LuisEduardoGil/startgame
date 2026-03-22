@@ -1985,10 +1985,23 @@ function OrderStatusScreen({ orderId, onBack }) {
                   </div>
                   <h3 style={{ color:st.color, fontSize:20, fontWeight:800, fontFamily:F, margin:"0 0 12px" }}>{st.title}</h3>
                   <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
-                    <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 4px" }}>MÉTODO DE PAGO</p>
-                    <p style={{ color:"#fff", fontSize:15, fontWeight:800, fontFamily:F, margin:0 }}>
-                      {{"pagomovil":"📱 Pago Móvil","binance":"🟡 Binance Pay","zinli":"💜 Zinli","paypal":"🔷 PayPal"}[order?.payment_method] || order?.payment_method}
-                    </p>
+                    <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 8px" }}>MÉTODO DE PAGO</p>
+                    {(() => {
+                      const m = GLOBAL_METHODS.find(x => x.id === order?.payment_method);
+                      const fallbackIcon = {"pagomovil":"📱","binance":"🟡","zinli":"💜","paypal":"🔷"}[order?.payment_method] || "💳";
+                      const fallbackLabel = {"pagomovil":"Pago Móvil","binance":"Binance Pay","zinli":"Zinli","paypal":"PayPal"}[order?.payment_method] || order?.payment_method;
+                      return (
+                        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                          {m?.logo_url
+                            ? <div style={{ width:36, height:36, borderRadius:10, background:"rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden" }}>
+                                <img src={m.logo_url} style={{ width:28, height:28, objectFit:"contain" }} alt={m.label}/>
+                              </div>
+                            : <span style={{ fontSize:24, flexShrink:0 }}>{m?.icon || fallbackIcon}</span>
+                          }
+                          <p style={{ color:"#fff", fontSize:15, fontWeight:800, fontFamily:F, margin:0 }}>{m?.label || fallbackLabel}</p>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div style={{ background:"rgba(255,255,255,0.06)", borderRadius:12, padding:"12px 16px", marginBottom:8 }}>
                     <p style={{ color:"#F0EDE8", fontSize:10, fontFamily:F, fontWeight:700, letterSpacing:"0.1em", margin:"0 0 4px" }}>Monto pagado</p>
